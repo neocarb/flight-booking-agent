@@ -3,8 +3,8 @@ from langchain_core.messages import HumanMessage
 from langgraph.types import Command
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from state import EmailManagerState
-from email_management_agent.utils.tools import tools
+from wwc.workers.email.email_management_agent.utils.state import EmailManagerState
+from wwc.workers.email.email_management_agent.utils.tools import tools
 
 llm = ChatOpenAI(model="gpt-4o")
 
