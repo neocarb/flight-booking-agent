@@ -7,7 +7,7 @@ from langchain_google_community.gmail.utils import (
 credentials = get_gmail_credentials(
     token_file="token.json",
     scopes=["https://mail.google.com/"],
-    client_secrets_file="wwc/workers/email/email_management_agent/utils/credentials.json",
+    client_secrets_file="credentials.json",
 )
 api_resource = build_resource_service(credentials=credentials)
 email_toolkit = GmailToolkit(api_resource=api_resource)
