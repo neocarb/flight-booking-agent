@@ -1,4 +1,5 @@
 langchain-google-community
+langchain-google-community[gmail]
 langchain
 langgraph
 langsmith
