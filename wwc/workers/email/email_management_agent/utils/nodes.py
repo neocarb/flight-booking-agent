@@ -37,3 +37,5 @@ def email_manager_node(state: EmailManagerState) -> Command[Literal["__end__", "
     if "INPUT" in llm_message.content:
             command = Command(update={"messages": [llm_message]}, goto="email_human_node")
             return command
+        
+    return Command(update={"messages": result["messages"]}, goto="__end__")
