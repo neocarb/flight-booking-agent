@@ -3,6 +3,8 @@ from langchain_core.messages import HumanMessage
 from langgraph.types import Command
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
+from langgraph.types import interrupt
+
 from email_management_agent.utils.state import EmailManagerState
 from email_management_agent.utils.tools import tools
 
@@ -11,7 +13,7 @@ llm = ChatOpenAI(model="gpt-4o")
 # human node
 def email_human_node(state: EmailManagerState) -> Command[Literal["email_manager_node"]]:
     # get user input
-    user_input = input("Enter your input: ")
+    user_input = interrupt("Enter your input: ")
     # return user input
     return Command(update={"messages": [HumanMessage(content=user_input)]}, goto="email_manager_node")
 
