@@ -28,7 +28,8 @@ def email_manager_node(state: EmailManagerState) -> Command[Literal["__end__", "
     email_manager_agent = create_react_agent(
         llm,
         tools=[tools[1], tools[2], tools[3]],
-        prompt=email_manager_instruction
+        prompt=email_manager_instruction,
+        interrupt_before=["tools"]
     )
     
     result = email_manager_agent.invoke({"messages": state['messages']})
