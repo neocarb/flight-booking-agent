@@ -90,10 +90,3 @@ def create_flight_booking(
     ) -> Annotated[str,"booking reference for the flight booking"]:
     """Create a flight booking based on the selected offer ID, payment details and passenger details. Returns a booking reference."""
     return "booking_reference_12345"
-
-
-if __name__ == "__main__":
-    result = get_offer(
-        offer_id="off_0000AtaArLGLsZ8NKvvpDC"
-    )
-    print(result)
