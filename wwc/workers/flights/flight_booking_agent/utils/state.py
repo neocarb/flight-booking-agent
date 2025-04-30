@@ -5,8 +5,9 @@ from flight_booking_agent.models.payment_dto import PaymentDTO
 
 
 class FlightBookingState(MessagesState):
-    offers: list[OfferDTO]= []
-    selected_offer: OfferDTO
+    flight_offers: str
+    selected_flight_offer_id: str
+    selected_flight_offer: str
     passenger_details: PassengerDTO
     payment_details: PaymentDTO
     booking_reference: str

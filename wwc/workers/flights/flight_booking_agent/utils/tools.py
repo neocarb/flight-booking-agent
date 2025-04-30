@@ -2,6 +2,7 @@ import json
 import requests
 from typing import Annotated, List
 from langchain_core.tools import tool
+from langgraph.types import Command
 
 # can tools only return json string or dict? Can they return POJO or other types of objects?
 @tool
@@ -9,8 +10,7 @@ def search_offers(
     origin: Annotated[str, "flight origin city"],
     destination: Annotated[str, "flight destination city"],
     departure_date: Annotated[str,"flight departure date from origin"],
-    passengers: Annotated[List[str],"list of passenger types if passenger is above 18 then adult otherwise age"],
-) -> Annotated[str,"json string with details of searched flights offers and passenger details"]:
+    passengers: Annotated[List[str],"list of passenger types if passenger is above 18 then adult otherwise age"]):
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
         # Example API endpoint and API key (replace with your real ones)
@@ -31,7 +31,11 @@ def search_offers(
 
         if response.status_code == 200:
             flights_data = response.json()
-            return json.dumps(flights_data, indent=2)
+            return Command(
+                update={
+                    "flight_offers": json.dumps(flights_data.get('data'))
+                }
+            )
         else:
             return json.dumps({
                 "error": f"Failed to fetch flights. Status Code: {response.status_code}",
@@ -45,10 +49,9 @@ def search_offers(
         }, indent=2)
 
 @tool
-def get_offer(
-    offer_id: Annotated[str, "offer ID"],
-) -> Annotated[str,"json string with details of flight offer"]:
-    """Fetch flight offer details based on the offer ID. Returns a json string with details of the flight offer."""
+def confirm_offer(
+    offer_id: Annotated[str, "offer ID"]):
+    """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
     try:
         # Example API endpoint and API key (replace with your real ones)
         api_url = f"https://flightbookingserver-458112.ue.r.appspot.com/api/duffel/getOffer?offer_id={offer_id}"
@@ -61,18 +64,25 @@ def get_offer(
         
         if response.status_code == 200:
             offer_data = response.json()
-            return json.dumps(offer_data, indent=2)
+            return Command(
+                update={
+                    "selected_flight_offer_id": offer_id,
+                    "selected_flight_offer": json.dumps(offer_data.get('data'))
+                }
+            )    
         else:
-            return json.dumps({
-                "error": f"Failed to fetch offer. Status Code: {response.status_code}",
-                "details": response.text
-            }, indent=2)
+            return Command(
+                update={
+                    "selected_flight_offer_id": offer_id
+                }
+            )    
         
     except Exception as e:
-        return json.dumps({
-            "error": "An exception occurred while fetching offer.",
-            "details": str(e)
-        }, indent=2)
+        return Command(
+                update={
+                    "selected_flight_offer_id": offer_id
+                }
+            )  
         
 @tool
 def process_payment(
