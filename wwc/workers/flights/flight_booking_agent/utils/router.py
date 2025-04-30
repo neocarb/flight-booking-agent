@@ -48,6 +48,10 @@ def confirm_flight_offer_router(state: FlightBookingState) -> NodeType:
     except Exception as e:
         logger.error(f"Error while confirming flight offer: {e}")
         return 'confirm_flight_offer_node'  # maybe human_node?
+    
+def human_router(state: FlightBookingState) -> NodeType:
+    # return the node which passed the human node
+    return state['from_node']
         
      
      
