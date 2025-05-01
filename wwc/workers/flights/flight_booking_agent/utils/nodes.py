@@ -36,7 +36,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     result = search_flight_offers_agent.invoke(state)
     ai_message = result['messages'][-1]
     return FlightBookingState(
-        messages=state.messages + [ai_message],
+        messages=state['messages'] + [ai_message],
         from_node="search_flight_offers_node"
     )
 
@@ -61,7 +61,7 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     result = confirm_flight_offer_agent.invoke(state)
     ai_message = result['messages'][-1]
     return FlightBookingState(
-        messages=state.messages + [ai_message],
+        messages=state['messages'] + [ai_message],
         from_node="confirm_flight_offer_node"
     )
 
