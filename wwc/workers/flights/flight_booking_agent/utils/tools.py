@@ -37,21 +37,14 @@ def search_offers(
             flights_data = response.json()
             return Command(
                 update={
-                    "messages": [ToolMessage(flights_data.get('data'), tool_call_id=tool_call_id)],
-                    "flight_offers": json.dumps(flights_data.get('data'))
+                    "flight_offers": json.dumps(flights_data.get('data')),
+                    "messages": [ToolMessage(flights_data.get('data'), tool_call_id=tool_call_id)]
                 }
             )
         else:
-            return json.dumps({
-                "error": f"Failed to fetch flights. Status Code: {response.status_code}",
-                "details": response.text
-            }, indent=2)
-        
+            return Command(update={"messages": [ToolMessage("Failed to fetch flight offers", tool_call_id=tool_call_id)]})
     except Exception as e:
-        return json.dumps({
-            "error": "An exception occurred while fetching flights.",
-            "details": str(e)
-        }, indent=2)
+       return Command(update={"messages": [ToolMessage("Unable to fetch flight offers", tool_call_id=tool_call_id)]})
 
 @tool
 def confirm_offer(

@@ -5,10 +5,10 @@ from flight_booking_agent.models.payment_dto import PaymentDTO
 
 
 class FlightBookingState(MessagesState):
-    flight_offers: str = None
-    selected_flight_offer_id: str = None
-    selected_flight_offer: str = None
-    passenger_details: PassengerDTO = None
-    payment_details: PaymentDTO = None
-    booking_reference: str = None
-    from_node: str = None
+    flight_offers: str = ""
+    selected_flight_offer_id: str = ""
+    selected_flight_offer: str = ""
+    passenger_details: str = ""
+    payment_details: str = ""
+    booking_reference: str = ""
+    from_node: str = ""
