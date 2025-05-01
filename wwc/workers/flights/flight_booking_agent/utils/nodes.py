@@ -31,11 +31,12 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     )
     
     result = search_flight_offers_agent.invoke(state)
-    ai_message = result['messages'][-1]
-    return {
-        "messages": [ai_message],
-        "from_node": "search_flight_offers_node",
-    }
+    print("result", result)
+
+    updated_state = dict(state)
+    updated_state.update(result)
+    updated_state["from_node"] = "search_flight_offers_node"
+    return updated_state
 
 
 # make this node more deterministic gradually
