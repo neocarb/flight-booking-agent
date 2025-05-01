@@ -15,6 +15,12 @@ def human_node(state: FlightBookingState):
     return FlightBookingState(
         messages=state.messages + [human_message],
         from_node="human_node",
+        flight_offers=state['flight_offers'] if 'flight_offers' in state else None,
+        selected_flight_offer_id=state['selected_flight_offer_id'] if 'selected_flight_offer_id' in state else None,
+        selected_flight_offer=state['selected_flight_offer'] if 'selected_flight_offer' in state else None,
+        passenger_details=state['passenger_details'] if 'passenger_details' in state else None,
+        payment_details=state['payment_details'] if 'payment_details' in state else None,
+        booking_reference=state['booking_reference'] if 'booking_reference' in state else None
     )
 
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
