@@ -11,17 +11,17 @@ NodeType = Literal['search_flight_offers_node', 'human_node', 'confirm_flight_of
 def search_flight_offers_router(state: FlightBookingState) -> NodeType:
     logger.info("Entering search_flight_offers_router")
     print("state", state)
-    if len(state['flight_offers']) == 0:
-        return 'human_node'
-    return 'confirm_flight_offer_node'
+    if 'flight_offers' in state and len(state['flight_offers']) != 0:
+        return 'confirm_flight_offer_node'
+    return 'human_node'
     
 def confirm_flight_offer_router(state: FlightBookingState) -> NodeType:
     logger.info("Entering confirm_flight_offer_router")
+    print("state", state)
     
-    if  state['selected_flight_offer_id'] and state['selected_flight_offer']:
+    if  'selected_flight_offer_id' in state and state['selected_flight_offer_id'] and 'selected_flight_offer' in state and state['selected_flight_offer']:
         return 'payment_node'
-    else:
-        return 'human_node'
+    return 'human_node'
     
     # try:
     #     flight_offer_json = json.loads(state['selected_flight_offer'])

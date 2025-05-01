@@ -35,22 +35,15 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     print("result", result)
     # get tool message from the result
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage)), None)
-    print("tool_message", tool_message)
     if tool_message:
         tool_message_content = tool_message.content
         print("tool_message_content", tool_message_content)
         
     return {
-        "messages": [ai_message],
+        "messages": result,
         'from_node': 'search_flight_offers_node',
         "flight_offers": tool_message_content,
     }
-    
-
-    updated_state = dict(state)
-    updated_state.update(result)
-    updated_state["from_node"] = "search_flight_offers_node"
-    return updated_state
 
 
 # make this node more deterministic gradually
