@@ -14,17 +14,11 @@ def human_node(state: FlightBookingState):
 
 def search_flight_offers_node(state: FlightBookingState):
     search_flight_offers_instruction = """
-    You are a helpful and knowledgeable flight booking assistant. Your goal is to help the user search for flights and select a final option based on their travel preferences.
-    Follow these rules strictly:
-    1. Use the prefix `INPUT:` when asking the user for missing information or confirming preferences.
-    - Examples:  
-        INPUT: What is your destination city?  
-        INPUT: Do you have a preferred time or airline?
-    2. After collecting all preferences, provide suitable flight options. Assist the user in comparing and selecting one.
-    3. Once the user confirms their choice, finalize the conversation using the prefix `FINAL:` followed by the selected flight ID in this format: FINAL: FLIGHT ID: <id>
-    4. You can use 'FINAL' if the user wants to exit the conversation.
-    5. Do not use `INPUT:` after you've already issued a `FINAL:` response.
-    Keep your tone helpful, professional, and concise. If any information is ambiguous, ask clarifying questions. Ensure the final response is uses the given format.
+    You are a helpful and knowledgeable flight booking assistant. Your goal is to help the user search for flight offers based on their preferences.
+    You will ask they user for all the necessary information to search for flight offers.
+    Only once you have all the information, you will call the search_offers tool to get the flight offers.
+    You will then present the user with the flight offers from the search_offers tool in a beautiful format after which the confirm_flight_offer_node will take offer to ask the user for the chosen flight offer and validate the offer.
+    Keep your tone helpful, professional, and concise. If any information is ambiguous, ask clarifying questions. 
     """
     search_flight_offers_agent = create_react_agent(
         llm,
@@ -33,8 +27,8 @@ def search_flight_offers_node(state: FlightBookingState):
     )
     
     result = search_flight_offers_agent.invoke(state)
-    ai_message = AIMessage(content=result["messages"][-1], name="flight_search_agent")
-    state['messages'].append(ai_message)
+    ai_message = result['messages'][-1]
+    state['messages'].append(ai_message) # technically can put the entire result to be the state?
     state['from_node'] = "search_flight_offers_node"
     return state
 
@@ -64,7 +58,7 @@ def confirm_flight_offer_node(state: FlightBookingState):
     )
     
     result = confirm_flight_offer_agent.invoke(state)
-    ai_message = AIMessage(content=result["messages"][-1], name="flight_confirm_agent")
+    ai_message = result['messages'][-1]
     state['messages'].append(ai_message)
     state['from_node'] = "confirm_flight_offer_node"
     return state

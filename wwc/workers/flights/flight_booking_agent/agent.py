@@ -1,4 +1,5 @@
 from typing import TypedDict, Literal
+from langchain_core.messages import HumanMessage
 
 from langgraph.graph import StateGraph, START, END
 from flight_booking_agent.utils.state import FlightBookingState
@@ -49,6 +50,21 @@ flight_booking_builder.add_conditional_edges(
 )
 flight_booking_builder.add_edge("confirm_flight_offer_node", END)
 graph = flight_booking_builder.compile()
+print(graph)
+
+
+'''
+thread_config = {"configurable": {"thread_id": 30}}
+input_dict = {"messages": [HumanMessage(content="Heyyy")]}
+for event in graph.stream(
+        input_dict,
+        config=thread_config,
+        stream_mode="values",
+        debug=True,
+        subgraphs=True):
+    print(event)
+    print("--------------------------------")
+'''
 
 
 

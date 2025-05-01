@@ -10,7 +10,8 @@ NodeType = Literal['search_flight_offers_node', 'human_node', 'confirm_flight_of
 
 def search_flight_offers_router(state: FlightBookingState) -> NodeType:
     logger.info("Entering search_flight_offers_router")
-    if not state['flight_offers']:
+    print("state", state)
+    if 'flight_offers' not in state:
         return 'human_node'
     
     try:
@@ -26,28 +27,22 @@ def search_flight_offers_router(state: FlightBookingState) -> NodeType:
     
 def confirm_flight_offer_router(state: FlightBookingState) -> NodeType:
     logger.info("Entering confirm_flight_offer_router")
-    if state['selected_flight_offer_id'] and state['selected_flight_offer']:
+    
+    if 'selected_flight_offer_id' in state and state['selected_flight_offer_id'] and 'selected_flight_offer' in state and state['selected_flight_offer']:
         return 'payment_node'
-    
-    if not state['selected_flight_offer_id']:
+    else:
         return 'human_node'
     
-    if state['selected_flight_offer_id'] and not state['selected_flight_offer']:
-        return 'confirm_flight_offer_node'
-    
-    if not state['selected_flight_offer']:
-        return 'human_node'
-    
-    try:
-        flight_offer_json = json.loads(state['selected_flight_offer'])
-        flight_offer = OfferDTO(flight_offer_json)
-        if not flight_offer_json:
-            return 'payment_node'  # reconsider
-        return 'confirm_flight_offer_node'
+    # try:
+    #     flight_offer_json = json.loads(state['selected_flight_offer'])
+    #     flight_offer = OfferDTO(flight_offer_json)
+    #     if not flight_offer_json:
+    #         return 'payment_node'  # reconsider
+    #     return 'confirm_flight_offer_node'
         
-    except Exception as e:
-        logger.error(f"Error while confirming flight offer: {e}")
-        return 'confirm_flight_offer_node'  # maybe human_node?
+    # except Exception as e:
+    #     logger.error(f"Error while confirming flight offer: {e}")
+    #     return 'confirm_flight_offer_node'  # maybe human_node?
     
 def human_router(state: FlightBookingState) -> NodeType:
     # return the node which passed the human node
