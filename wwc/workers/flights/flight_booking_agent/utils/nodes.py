@@ -40,7 +40,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
         print("tool_message_content", tool_message_content)
         
     return {
-        "messages": result,
+        "messages": result['messages'],
         'from_node': 'search_flight_offers_node',
         "flight_offers": tool_message_content,
     }
