@@ -17,6 +17,7 @@ def search_flight_offers_router(state: FlightBookingState) -> NodeType:
     try:
         flight_offers_json = json.loads(state['flight_offers'])
         flight_offers_list = [OfferDTO(**offer) for offer in flight_offers_json["offers"]]
+        logger.info(f"Flight offers: {flight_offers_list}")
         if(len(flight_offers_list) == 0):
             return 'human_node' # reconsider
         return 'confirm_flight_offer_node'
