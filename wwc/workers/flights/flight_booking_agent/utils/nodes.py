@@ -28,11 +28,10 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     result = search_flight_offers_agent.invoke(state)
     ai_message = result['messages'][-1]
-    return {
-        **state,
-        "messages": state['messages'] + [ai_message],
-        'from_node': "search_flight_offers_node"
-    }
+    return FlightBookingState(
+        messages=state.messages + [ai_message],
+        from_node="search_flight_offers_node"
+    )
 
 
 # make this node more deterministic gradually
@@ -54,24 +53,21 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     
     result = confirm_flight_offer_agent.invoke(state)
     ai_message = result['messages'][-1]
-    return {
-        **state,
-        "messages": state['messages'] + [ai_message],
-        'from_node': "confirm_flight_offer_node"
-    }
+    return FlightBookingState(
+        messages=state.messages + [ai_message],
+        from_node="confirm_flight_offer_node"
+    )
 
 
 def make_payment_node(state: FlightBookingState) -> FlightBookingState:    
-    return {
-        **state,
-        'from_node': "make_payment_node"
-    }
+    return FlightBookingState(
+        from_node="make_payment_node"
+    )
 
 def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:  
-    return {
-        **state,
-        'from_node': "create_flight_booking_node"
-    }
+    return FlightBookingState(
+        from_node="create_flight_booking_node"
+    )
     
         
 

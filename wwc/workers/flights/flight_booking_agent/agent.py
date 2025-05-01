@@ -1,8 +1,6 @@
-from typing import TypedDict, Literal
-from langchain_core.messages import HumanMessage
-
 from langgraph.graph import StateGraph, START, END
 from flight_booking_agent.utils.state import FlightBookingState
+from flight_booking_agent.utils.router import search_flight_offers_router, confirm_flight_offer_router, human_router
 from flight_booking_agent.utils.nodes import (
     search_flight_offers_node,
     human_node,
@@ -10,7 +8,6 @@ from flight_booking_agent.utils.nodes import (
     make_payment_node,
     create_flight_booking_node
 )
-from flight_booking_agent.utils.router import search_flight_offers_router, confirm_flight_offer_router, human_router
 
 flight_booking_builder = StateGraph(FlightBookingState)
 flight_booking_builder.add_node("search_flight_offers_node", search_flight_offers_node)
