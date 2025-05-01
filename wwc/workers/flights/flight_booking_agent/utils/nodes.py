@@ -36,12 +36,12 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     return FlightBookingState(
         messages=state['messages'] + [ai_message],
         from_node="search_flight_offers_node",
-        flight_offers=state['flight_offers'],
-        selected_flight_offer_id=state['selected_flight_offer_id'],
-        selected_flight_offer=state['selected_flight_offer'],
-        passenger_details=state['passenger_details'],
-        payment_details=state['payment_details'],
-        booking_reference=state['booking_reference']
+        flight_offers=state['flight_offers'] if 'flight_offers' in state else None,
+        selected_flight_offer_id=state['selected_flight_offer_id'] if 'selected_flight_offer_id' in state else None,
+        selected_flight_offer=state['selected_flight_offer'] if 'selected_flight_offer' in state else None,
+        passenger_details=state['passenger_details'] if 'passenger_details' in state else None,
+        payment_details=state['payment_details'] if 'payment_details' in state else None,
+        booking_reference=state['booking_reference'] if 'booking_reference' in state else None
     )
 
 
@@ -67,12 +67,12 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     return FlightBookingState(
         messages=state['messages'] + [ai_message],
         from_node="confirm_flight_offer_node",
-        flight_offers=state['flight_offers'],
-        selected_flight_offer_id=state['selected_flight_offer_id'],
-        selected_flight_offer=state['selected_flight_offer'],
-        passenger_details=state['passenger_details'],
-        payment_details=state['payment_details'],
-        booking_reference=state['booking_reference']
+        flight_offers=state['flight_offers'] if 'flight_offers' in state else None,
+        selected_flight_offer_id=state['selected_flight_offer_id'] if 'selected_flight_offer_id' in state else None,
+        selected_flight_offer=state['selected_flight_offer'] if 'selected_flight_offer' in state else None,
+        passenger_details=state['passenger_details'] if 'passenger_details' in state else None,
+        payment_details=state['payment_details'] if 'payment_details' in state else None,
+        booking_reference=state['booking_reference'] if 'booking_reference' in state else None
     )
 
 
