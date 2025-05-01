@@ -12,16 +12,9 @@ def human_node(state: FlightBookingState):
     user_input = interrupt("Enter your input: ")
     # create a human message
     human_message = HumanMessage(content=user_input)
-    return FlightBookingState(
-        messages=state['messages'] + [human_message],
-        from_node=state['from_node'],
-        flight_offers=state['flight_offers'],
-        selected_flight_offer_id=state['selected_flight_offer_id'],
-        selected_flight_offer=state['selected_flight_offer'],
-        passenger_details=state['passenger_details'],
-        payment_details=state['payment_details'],
-        booking_reference=state['booking_reference']
-    )
+    return {
+        "messages": [human_message]
+    }
 
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_instruction = """
@@ -39,16 +32,10 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     result = search_flight_offers_agent.invoke(state)
     ai_message = result['messages'][-1]
-    return FlightBookingState(
-        messages=state['messages'] + [ai_message],
-        from_node="search_flight_offers_node",
-        flight_offers=state['flight_offers'],
-        selected_flight_offer_id=state['selected_flight_offer_id'],
-        selected_flight_offer=state['selected_flight_offer'],
-        passenger_details=state['passenger_details'],
-        payment_details=state['payment_details'],
-        booking_reference=state['booking_reference']
-    )
+    return {
+        "messages": [ai_message],
+        "from_node": "search_flight_offers_node",
+    }
 
 
 # make this node more deterministic gradually
@@ -70,16 +57,10 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     
     result = confirm_flight_offer_agent.invoke(state)
     ai_message = result['messages'][-1]
-    return FlightBookingState(
-        messages=state['messages'] + [ai_message],
-        from_node="confirm_flight_offer_node",
-        flight_offers=state['flight_offers'],
-        selected_flight_offer_id=state['selected_flight_offer_id'],
-        selected_flight_offer=state['selected_flight_offer'],
-        passenger_details=state['passenger_details'],
-        payment_details=state['payment_details'],
-        booking_reference=state['booking_reference']
-    )
+    return {
+        "messages": [ai_message],
+        "from_node": "confirm_flight_offer_node",
+    }
 
 
 def make_payment_node(state: FlightBookingState) -> FlightBookingState:    
