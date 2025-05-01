@@ -37,7 +37,7 @@ def search_offers(
             flights_data = response.json()
             return Command(
                 update={
-                    "messages": [ToolMessage("Successfully searched for flight offers", tool_call_id=tool_call_id)],
+                    "messages": [ToolMessage(flights_data.get('data'), tool_call_id=tool_call_id)],
                     "flight_offers": json.dumps(flights_data.get('data'))
                 }
             )
