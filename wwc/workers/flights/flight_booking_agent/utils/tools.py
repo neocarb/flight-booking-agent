@@ -10,7 +10,7 @@ def search_offers(
     origin: Annotated[str, "flight origin city"],
     destination: Annotated[str, "flight destination city"],
     departure_date: Annotated[str,"flight departure date from origin"],
-    passengers: Annotated[List[str],"list of passenger types if passenger is above 18 then adult otherwise age"]):
+    passenger_age: Annotated[str,"if passenger is above 18 then adult otherwise age"]):
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
         # Example API endpoint and API key (replace with your real ones)
@@ -19,7 +19,8 @@ def search_offers(
         headers = {
             "Content-Type": "application/json"
         }
-
+        
+        passengers = [{"type": passenger_age}]
         payload = {
             "origin": origin,
             "destination": destination,
