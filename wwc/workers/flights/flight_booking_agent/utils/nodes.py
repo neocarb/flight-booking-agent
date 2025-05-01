@@ -16,8 +16,6 @@ def human_node(state: FlightBookingState):
         messages=state.messages + [human_message],
         from_node="human_node",
     )
-    
-
 
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_instruction = """
@@ -37,7 +35,13 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     ai_message = result['messages'][-1]
     return FlightBookingState(
         messages=state['messages'] + [ai_message],
-        from_node="search_flight_offers_node"
+        from_node="search_flight_offers_node",
+        flight_offers=state['flight_offers'],
+        selected_flight_offer_id=state['selected_flight_offer_id'],
+        selected_flight_offer=state['selected_flight_offer'],
+        passenger_details=state['passenger_details'],
+        payment_details=state['payment_details'],
+        booking_reference=state['booking_reference']
     )
 
 
@@ -62,7 +66,13 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     ai_message = result['messages'][-1]
     return FlightBookingState(
         messages=state['messages'] + [ai_message],
-        from_node="confirm_flight_offer_node"
+        from_node="confirm_flight_offer_node",
+        flight_offers=state['flight_offers'],
+        selected_flight_offer_id=state['selected_flight_offer_id'],
+        selected_flight_offer=state['selected_flight_offer'],
+        passenger_details=state['passenger_details'],
+        payment_details=state['payment_details'],
+        booking_reference=state['booking_reference']
     )
 
 
