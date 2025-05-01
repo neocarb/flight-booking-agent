@@ -10,6 +10,13 @@ llm = ChatOpenAI(model="gpt-4o")
 def human_node(state: FlightBookingState):
     # get user input
     user_input = interrupt("Enter your input: ")
+    # create a human message
+    human_message = HumanMessage(content=user_input)
+    return FlightBookingState(
+        messages=state.messages + [human_message],
+        from_node="human_node",
+    )
+    
 
 
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
