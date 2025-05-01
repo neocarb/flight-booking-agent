@@ -3,10 +3,13 @@ import requests
 from typing import Annotated, List
 from langchain_core.tools import tool
 from langgraph.types import Command
+from langchain_core.tools.base import InjectedToolCallId
+from langchain_core.messages import ToolMessage
 
 # can tools only return json string or dict? Can they return POJO or other types of objects?
 @tool
 def search_offers(
+    tool_call_id: Annotated[str, InjectedToolCallId],
     origin: Annotated[str, "flight origin city"],
     destination: Annotated[str, "flight destination city"],
     departure_date: Annotated[str,"flight departure date from origin"],
@@ -34,6 +37,7 @@ def search_offers(
             flights_data = response.json()
             return Command(
                 update={
+                    "messages": [ToolMessage("Successfully searched for flight offers", tool_call_id=tool_call_id)],
                     "flight_offers": json.dumps(flights_data.get('data'))
                 }
             )
@@ -51,6 +55,7 @@ def search_offers(
 
 @tool
 def confirm_offer(
+    tool_call_id: Annotated[str, InjectedToolCallId],
     offer_id: Annotated[str, "offer ID"]):
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
     try:
@@ -67,6 +72,7 @@ def confirm_offer(
             offer_data = response.json()
             return Command(
                 update={
+                    "messages": [ToolMessage("Successfully confirmed flight offer", tool_call_id=tool_call_id)],
                     "selected_flight_offer_id": offer_id,
                     "selected_flight_offer": json.dumps(offer_data.get('data'))
                 }
@@ -74,6 +80,7 @@ def confirm_offer(
         else:
             return Command(
                 update={
+                    "messages": [ToolMessage("Confirm flight offer failed", tool_call_id=tool_call_id)],
                     "selected_flight_offer_id": offer_id
                 }
             )    
@@ -81,6 +88,7 @@ def confirm_offer(
     except Exception as e:
         return Command(
                 update={
+                    "messages": [ToolMessage("Confirm flight offer failed", tool_call_id=tool_call_id)],
                     "selected_flight_offer_id": offer_id
                 }
             )  
