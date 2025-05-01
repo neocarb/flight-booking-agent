@@ -12,4 +12,3 @@ class FlightBookingState(MessagesState):
     payment_details: PaymentDTO
     booking_reference: str
     from_node: str
-    pass
