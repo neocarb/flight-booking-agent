@@ -31,7 +31,21 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     )
     
     result = search_flight_offers_agent.invoke(state)
+    ai_message = result['messages'][-1]
     print("result", result)
+    # get tool message from the result
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage)), None)
+    print("tool_message", tool_message)
+    if tool_message:
+        tool_message_content = tool_message.content
+        print("tool_message_content", tool_message_content)
+        
+    return {
+        "messages": [ai_message],
+        'from_node': 'search_flight_offers_node',
+        "flight_offers": tool_message_content,
+    }
+    
 
     updated_state = dict(state)
     updated_state.update(result)
