@@ -69,25 +69,22 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     result = confirm_flight_offer_agent.invoke(state)
     print("confirm_flight_offer_node result", result)
     
+    selected_offer = None
+    selected_offer_id = None
     # update state with the selected flight offer ID  
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'confirm_offer'), None)
     tool_message_content = tool_message.content if tool_message else None
-    if tool_message_content:
-        print("tool_message_content", tool_message_content)
-        # Extract the offer ID from the tool message content
-        tool_message_content_dict = json.loads(tool_message_content)
-        offer = tool_message_content_dict.get('offer')
-        if offer:
-            offer_id = offer.get('offerId')
-        
-        print("offer_id", offer_id)
-    print("tool_message_content", tool_message_content)
-
+    tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
+    selected_offer = tool_message_content_dict.get('offer') if tool_message_content_dict else None
+    selected_offer_id = selected_offer.get('offerId') if selected_offer else None
+    print("selected_offer", selected_offer)
+    print("selected_offer_id", selected_offer_id)
+    
     return {
         "messages": result['messages'],
         "from_node": "confirm_flight_offer_node",
-        "selected_flight_offer_id": offer_id,
-        "selected_flight_offer": str(offer),
+        "selected_flight_offer_id": selected_offer_id,  # corrected variable name
+        "selected_flight_offer": str(selected_offer) if selected_offer else None,  # corrected variable name
     }
 
 
