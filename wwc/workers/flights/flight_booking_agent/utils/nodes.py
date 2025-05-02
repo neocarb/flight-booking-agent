@@ -64,6 +64,8 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     )
     
     result = confirm_flight_offer_agent.invoke(state)
+    print("confirm_flight_offer_node result", result)
+    # update state with the selected flight offer ID   
     ai_message = result['messages'][-1]
     return {
         "messages": [ai_message],
