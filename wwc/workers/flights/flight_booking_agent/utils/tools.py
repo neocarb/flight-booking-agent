@@ -49,7 +49,7 @@ def search_offers(
 @tool
 def confirm_offer(
     tool_call_id: Annotated[str, InjectedToolCallId],
-    offer_id: Annotated[str, "offer ID"]):
+    offer_id: Annotated[str, "offer ID"]) -> Annotated[dict, "flight offer details"]:
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
     try:
         # Example API endpoint and API key (replace with your real ones)
@@ -63,28 +63,11 @@ def confirm_offer(
         
         if response.status_code == 200:
             offer_data = response.json()
-            return Command(
-                update={
-                    "messages": [ToolMessage("Successfully confirmed flight offer", tool_call_id=tool_call_id)],
-                    "selected_flight_offer_id": offer_id,
-                    "selected_flight_offer": json.dumps(offer_data.get('data'))
-                }
-            )    
+            return offer_data.get('data')
         else:
-            return Command(
-                update={
-                    "messages": [ToolMessage("Confirm flight offer failed", tool_call_id=tool_call_id)],
-                    "selected_flight_offer_id": offer_id
-                }
-            )    
-        
+            return {"error": f"Failed to fetch offer. Status code: {response.status_code}"}
     except Exception as e:
-        return Command(
-                update={
-                    "messages": [ToolMessage("Confirm flight offer failed", tool_call_id=tool_call_id)],
-                    "selected_flight_offer_id": offer_id
-                }
-            )  
+        return {"error": str(e)}
         
 @tool
 def process_payment(
