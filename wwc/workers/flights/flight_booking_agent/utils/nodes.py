@@ -53,8 +53,10 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     
     confirm_flight_offer_instruction = """
     You goal is to get the user to confirm their selected flight offer.
-    1. If the user has already provided a offer ID, confirm it using the confirm_order tool. If any of the details of the offer has changed, inform the user and ask them to confirm the new offer.
-    2. If the user has not provided a offer ID, ask them to choose a flight offer to proceed with.
+    1. If the user has not provided a offer ID, ask them to choose a flight offer to proceed with.
+    2. If the user has already provided a offer ID, confirm it using the confirm_order tool. If any of the details of the offer has changed, inform the user and ask them to confirm the new offer.
+    3. if the user confirms then move on to the payment node.
+    
     """
     
     confirm_flight_offer_agent = create_react_agent(
