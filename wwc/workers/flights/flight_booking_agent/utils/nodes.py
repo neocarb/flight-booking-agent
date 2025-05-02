@@ -4,6 +4,7 @@ from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
 from flight_booking_agent.utils.tools import search_offers, confirm_offer
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage,ToolMessage
+import json
 
 llm = ChatOpenAI(model="gpt-4o")
 
@@ -67,11 +68,26 @@ def confirm_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     
     result = confirm_flight_offer_agent.invoke(state)
     print("confirm_flight_offer_node result", result)
-    # update state with the selected flight offer ID   
-    ai_message = result['messages'][-1]
+    
+    # update state with the selected flight offer ID  
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'confirm_offer'), None)
+    tool_message_content = tool_message.content if tool_message else None
+    if tool_message_content:
+        print("tool_message_content", tool_message_content)
+        # Extract the offer ID from the tool message content
+        tool_message_content_dict = json.loads(tool_message_content)
+        offer = tool_message_content_dict.get('offer')
+        if offer:
+            offer_id = offer.get('offerId')
+        
+        print("offer_id", offer_id)
+    print("tool_message_content", tool_message_content)
+
     return {
-        "messages": [ai_message],
+        "messages": result['messages'],
         "from_node": "confirm_flight_offer_node",
+        "selected_flight_offer_id": offer_id,
+        "selected_flight_offer": str(offer),
     }
 
 
