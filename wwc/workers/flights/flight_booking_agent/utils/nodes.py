@@ -60,7 +60,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     2.2. Check if any of the offer details have changed compared to the original offer details.
     3. If the offer is no longer valid, inform the user and ask them to choose a new offer. Validate the new offer again as per step 2.
     4. If the offer is valid, ask the user to confirm if they want to proceed with the offer.
-    5. if the user confirms then move on to the payment node.
+    5. if the user confirms then move on to the collect_passenger_details_node.
     """
     
     validate_flight_offer_agent = create_react_agent(
@@ -112,7 +112,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     
     passenger_details = None
     # update state with the selected flight offer ID  
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage)), None)
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'collect_passenger_details'), None)
     tool_message_content = tool_message.content if tool_message else None
     tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
     passenger_details = tool_message_content_dict.get('passenger') if tool_message_content_dict else None
