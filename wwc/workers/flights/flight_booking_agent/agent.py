@@ -38,7 +38,7 @@ flight_booking_builder.add_conditional_edges(
             }
         )
 
-flight_booking_builder.add_edge(
+flight_booking_builder.add_conditional_edges(
     "collect_passenger_details_node", 
     collect_passenger_details_router,
     {
