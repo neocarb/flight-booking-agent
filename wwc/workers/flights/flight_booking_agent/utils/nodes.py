@@ -93,7 +93,6 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
 
 
 def make_payment_node(state: FlightBookingState) -> FlightBookingState:    
-    
     return FlightBookingState(
         from_node="make_payment_node"
     )
