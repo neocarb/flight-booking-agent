@@ -70,12 +70,14 @@ def get_latest_offer(
         return {"error": str(e)}
         
 @tool
-def process_payment(
-    amount: Annotated[float, "amount to be paid"],
-    currency: Annotated[str, "currency of the payment"],  
-    ) -> Annotated[bool,"True if payment is successful else False"]:
-    """Process payment for the flight booking. Returns True if payment is successful, else False."""
-    return True
+def create_payment_link(
+    description: Annotated[float, "description of the payment"],
+    name: Annotated[str, "passenger name for making payment"],  
+    contact_number: Annotated[str, "passenger contact number for making payment"],
+    ) -> Annotated[str,"url to open the payment page for making the payment"]:
+    """Process payment for the flight booking. Returns a URL to open the payment page for the passenger to make the payment."""
+    
+    return "https://rzp.io/rzp/BLso4cHo"
 
 @tool
 def create_flight_booking(

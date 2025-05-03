@@ -47,7 +47,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     }
 
 
-# make this node more deterministic gradually
+# make this node more deterministic and rule based gradually
 def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     # This node is responsible for confirming the flight offer selected by the user.
     # It will extract the flight ID from the user's response and update the state accordingly.
@@ -93,6 +93,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
 
 
 def make_payment_node(state: FlightBookingState) -> FlightBookingState:    
+    
     return FlightBookingState(
         from_node="make_payment_node"
     )
