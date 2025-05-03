@@ -52,7 +52,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     # This node is responsible for confirming the flight offer selected by the user.
     # It will extract the flight ID from the user's response and update the state accordingly.
     
-    confirm_flight_offer_instruction = """
+    validate_flight_offer_instruction = """
     You goal is to get the user to confirm their selected flight offer.
     1. If the user has not provided a offer ID, ask them to choose a flight offer to proceed with.DO NOT MAKE ANY ASSUMPTIONS ABOUT THE OFFER
     2. If the user has already provided a offer ID, validate if all the details of the offer are valid. TO validate follow the steps below
@@ -64,19 +64,19 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     
     """
     
-    confirm_flight_offer_agent = create_react_agent(
+    validate_flight_offer_agent = create_react_agent(
         llm,
         tools=[get_latest_offer],
-        prompt=confirm_flight_offer_instruction
+        prompt=validate_flight_offer_instruction
     )
     
-    result = confirm_flight_offer_agent.invoke(state)
+    result = validate_flight_offer_agent.invoke(state)
     print("validate_flight_offer_node result", result)
     
     selected_offer = None
     selected_offer_id = None
     # update state with the selected flight offer ID  
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'confirm_offer'), None)
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'get_latest_offer'), None)
     tool_message_content = tool_message.content if tool_message else None
     tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
     selected_offer = tool_message_content_dict.get('offer') if tool_message_content_dict else None
