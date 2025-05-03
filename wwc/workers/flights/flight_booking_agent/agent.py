@@ -5,7 +5,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from flight_booking_agent.utils.nodes import (
     search_flight_offers_node,
     human_node,
-    confirm_flight_offer_node,
+    validate_flight_offer_node,
     make_payment_node,
     create_flight_booking_node
 )
@@ -13,7 +13,7 @@ from flight_booking_agent.utils.nodes import (
 flight_booking_builder = StateGraph(FlightBookingState)
 flight_booking_builder.add_node("search_flight_offers_node", search_flight_offers_node)
 flight_booking_builder.add_node("human_node", human_node)
-flight_booking_builder.add_node("confirm_flight_offer_node", confirm_flight_offer_node)
+flight_booking_builder.add_node("validate_flight_offer_node", validate_flight_offer_node)
 flight_booking_builder.add_node("payment_node", make_payment_node)
 flight_booking_builder.add_node("create_flight_booking_node", create_flight_booking_node)
 
@@ -24,14 +24,14 @@ flight_booking_builder.add_conditional_edges(
             {
                 "search_flight_offers_node": "search_flight_offers_node",
                 "human_node": "human_node",
-                "confirm_flight_offer_node": "confirm_flight_offer_node"
+                "validate_flight_offer_node": "validate_flight_offer_node"
             }
         )
 flight_booking_builder.add_conditional_edges(
-            "confirm_flight_offer_node",
+            "validate_flight_offer_node",
             confirm_flight_offer_router,
             {
-                "confirm_flight_offer_node": "confirm_flight_offer_node",
+                "validate_flight_offer_node": "validate_flight_offer_node",
                 "payment_node": "payment_node",
                 "human_node": "human_node"
             }
@@ -41,12 +41,12 @@ flight_booking_builder.add_conditional_edges(
     human_router,
     {
         "search_flight_offers_node": "search_flight_offers_node",
-        "confirm_flight_offer_node": "confirm_flight_offer_node",
+        "validate_flight_offer_node": "validate_flight_offer_node",
         "payment_node": "payment_node",
         "create_flight_booking_node": "create_flight_booking_node"
     }
 )
-flight_booking_builder.add_edge("confirm_flight_offer_node", END)
+flight_booking_builder.add_edge("validate_flight_offer_node", END)
 
 checkpointer = MemorySaver()
 graph = flight_booking_builder.compile(checkpointer=checkpointer)

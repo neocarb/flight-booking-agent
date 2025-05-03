@@ -47,7 +47,7 @@ def search_offers(
        return Command(update={"messages": [ToolMessage("Unable to fetch flight offers", tool_call_id=tool_call_id)]})
 
 @tool
-def confirm_offer(
+def get_latest_offer(
     tool_call_id: Annotated[str, InjectedToolCallId],
     offer_id: Annotated[str, "offer ID"]) -> Annotated[dict, "flight offer details"]:
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
