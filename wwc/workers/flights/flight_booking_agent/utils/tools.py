@@ -68,7 +68,24 @@ def get_latest_offer(
             return {"error": f"Failed to fetch offer. Status code: {response.status_code}"}
     except Exception as e:
         return {"error": str(e)}
-        
+    
+@tool
+def collect_passenger_details(
+    passenger_name: str,
+    passenger_contact_number: str,
+    passenger_email: str,
+    passenger_age: str,
+    ) -> dict:
+    """Collect passenger details for flight booking."""
+    return {
+        "passenger": {
+            "name": passenger_name,
+            "contact_number": passenger_contact_number,
+            "email": passenger_email,
+            "age": passenger_age
+        }
+    }
+     
 @tool
 def create_payment_link(
     description: Annotated[float, "description of the payment"],

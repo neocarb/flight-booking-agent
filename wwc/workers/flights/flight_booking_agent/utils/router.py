@@ -15,12 +15,12 @@ def search_flight_offers_router(state: FlightBookingState) -> NodeType:
         return 'validate_flight_offer_node'
     return 'human_node'
     
-def confirm_flight_offer_router(state: FlightBookingState) -> NodeType:
-    logger.info("Entering confirm_flight_offer_router")
+def validate_flight_offer_router(state: FlightBookingState) -> NodeType:
+    logger.info("Entering validate_flight_offer_router")
     print("state", state)
     
     if  'selected_flight_offer_id' in state and state['selected_flight_offer_id'] and 'selected_flight_offer' in state and state['selected_flight_offer']:
-        return 'payment_node'
+        return 'collect_passenger_details_node'
     return 'human_node'
     
     # try:
@@ -33,6 +33,11 @@ def confirm_flight_offer_router(state: FlightBookingState) -> NodeType:
     # except Exception as e:
     #     logger.error(f"Error while confirming flight offer: {e}")
     #     return 'validate_flight_offer_node'  # maybe human_node?
+    
+def collect_passenger_details_router(state: FlightBookingState) -> NodeType:
+    if 'passenger_details' in state and state['passenger_details']:
+        return '__end__'
+    return 'human_node'
     
 def human_router(state: FlightBookingState) -> NodeType:
     # return the node which passed the human node

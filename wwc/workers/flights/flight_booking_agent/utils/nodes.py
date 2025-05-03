@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from flight_booking_agent.utils.state import FlightBookingState
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
-from flight_booking_agent.utils.tools import search_offers, get_latest_offer
+from flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage,ToolMessage
 import json
 
@@ -61,7 +61,6 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     3. If the offer is no longer valid, inform the user and ask them to choose a new offer. Validate the new offer again as per step 2.
     4. If the offer is valid, ask the user to confirm if they want to proceed with the offer.
     5. if the user confirms then move on to the payment node.
-    
     """
     
     validate_flight_offer_agent = create_react_agent(
@@ -91,6 +90,39 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
         "selected_flight_offer": str(selected_offer) if selected_offer else None,  # corrected variable name
     }
 
+def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingState:
+    # This node is responsible for collecting passenger details from the user.
+    # It will extract the passenger details from the user's response and update the state accordingly.
+    
+    collect_passenger_details_instruction = """
+    You goal is to get the user to provide their passenger details for flight booking.
+    1. Ask the user for their name, contact number, email, and age.
+    2. Once you have all the details, present them in a structured format for the user to review
+    3. Only nce the user confirms and finalises the details, call the collect_passenger_details tool to collect the passenger details. never call the collect_passenger_details tool without all the details.
+    """
+    
+    collect_passenger_details_agent = create_react_agent(
+        llm,
+        tools=[collect_passenger_details],
+        prompt=collect_passenger_details_instruction
+    )
+    
+    result = collect_passenger_details_agent.invoke(state)
+    print("collect_passenger_details_node result", result)
+    
+    passenger_details = None
+    # update state with the selected flight offer ID  
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage)), None)
+    tool_message_content = tool_message.content if tool_message else None
+    tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
+    passenger_details = tool_message_content_dict.get('passenger') if tool_message_content_dict else None
+    print("passenger_details", passenger_details)
+    
+    return {
+        "messages": result['messages'],
+        "from_node": "collect_passenger_details_node",
+        "passenger_details": str(passenger_details) if passenger_details else None,  # corrected variable name
+    }
 
 def make_payment_node(state: FlightBookingState) -> FlightBookingState:    
     return FlightBookingState(
