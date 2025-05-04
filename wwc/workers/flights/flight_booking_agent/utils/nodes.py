@@ -99,6 +99,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     1. Ask the user for their name, contact number, email, and age.
     2. Once you have all the details, present them in a structured format for the user to review
     3. Only nce the user confirms and finalises the details, call the collect_passenger_details tool to collect the passenger details. never call the collect_passenger_details tool without all the details.
+    4. After you are done, payment node will be called to process the payment.
     """
     
     collect_passenger_details_agent = create_react_agent(
@@ -121,7 +122,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     return {
         "messages": result['messages'],
         "from_node": "collect_passenger_details_node",
-        "passenger_details": str(passenger_details) if passenger_details else None,  # corrected variable name
+        "passenger_details": json.dumps(passenger_details) if passenger_details else None,  # corrected variable name
     }
 
 def payment_node(state: FlightBookingState) -> FlightBookingState:
