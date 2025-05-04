@@ -32,10 +32,10 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     )
     
     result = search_flight_offers_agent.invoke(state)
-    ai_message = result['messages'][-1]
     print("result", result)
     # get tool message from the result
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage)), None)
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
+    print("tool_message", tool_message)
     if tool_message:
         tool_message_content = tool_message.content
         print("tool_message_content", tool_message_content)
@@ -43,7 +43,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     return {
         "messages": result['messages'],
         'from_node': 'search_flight_offers_node',
-        "flight_offers": tool_message_content,
+        "flight_offers": tool_message_content if tool_message_content else None,
     }
 
 
