@@ -10,4 +10,4 @@ email_manager_builder.add_node("email_human_node", email_human_node)
 email_manager_builder.add_edge(START, "email_manager_node")
 
 # checkpointer = MemorySaver()
-graph = email_manager_builder.compile()
+email_graph = email_manager_builder.compile(name="email_management_agent")
