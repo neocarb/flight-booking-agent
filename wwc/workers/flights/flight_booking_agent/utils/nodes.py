@@ -36,9 +36,8 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     # get tool message from the result
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
     print("tool_message", tool_message)
-    if tool_message:
-        tool_message_content = tool_message.content
-        print("tool_message_content", tool_message_content)
+    tool_message_content = tool_message.content if tool_message else None
+    print("tool_message_content", tool_message_content)
         
     return {
         "messages": result['messages'],
