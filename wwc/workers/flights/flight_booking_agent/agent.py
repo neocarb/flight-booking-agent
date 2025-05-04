@@ -48,7 +48,7 @@ flight_booking_builder.add_conditional_edges(
     collect_passenger_details_router,
     {
         "human_node": "human_node",
-        "payment_node": payment_node,
+        "payment_node": "payment_node",
     }
     )
 
