@@ -9,6 +9,6 @@ class FlightBookingState(MessagesState):
     selected_flight_offer_id: str = ""
     selected_flight_offer: str = ""
     passenger_details: str = ""
-    payment_details: str = ""
+    payment_link: str = ""
     booking_reference: str = ""
     from_node: str = ""

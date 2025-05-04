@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from flight_booking_agent.utils.state import FlightBookingState
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
-from flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details
+from flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage,ToolMessage
 import json
 
@@ -124,21 +124,37 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
         "passenger_details": str(passenger_details) if passenger_details else None,  # corrected variable name
     }
 
-def make_payment_node(state: FlightBookingState) -> FlightBookingState:    
-    return FlightBookingState(
-        from_node="make_payment_node"
-    )
+def payment_node(state: FlightBookingState) -> FlightBookingState:
+    description = "Flight booking payment"
+    # convert the passenger details to a dictionary
+    passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
+    if not passenger_details:
+        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        return {
+            "messages": [payment_message],
+            "from_node": "payment_node",
+        }
 
-def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:  
-    return FlightBookingState(
-        from_node="create_flight_booking_node"
+    name = state.passenger_details.get('name')
+    contact = state.passenger_details.get('contact_number')
+    email = state.passenger_details.get('email')
+    payment_link = get_payment_link(
+        description=description,
+        name=name,
+        contact=contact,
+        email=email
     )
-    
-        
-
-    
-    
-    
-    
-    
-    
+    print("payment_link", payment_link)
+    if not payment_link:
+        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        return {
+            "messages": [payment_message],
+            "from_node": "payment_node",
+        }
+    payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}")
+    # add the payment message to the state 
+    return {
+        "from_node": "payment_node",
+        "messages": [payment_message],
+        "payment_link": payment_link,
+    }

@@ -86,7 +86,7 @@ def collect_passenger_details(
         }
     }
      
-@tool
+
 def get_payment_link(
     description: Annotated[float, "description of the payment"],
     name: Annotated[str, "passenger name for making payment"],  
