@@ -80,7 +80,7 @@ def collect_passenger_details(
     return {
         "passenger": {
             "name": passenger_name,
-            "contact_number": passenger_contact_number,
+            "contact": passenger_contact_number,
             "email": passenger_email,
             "age": passenger_age
         }

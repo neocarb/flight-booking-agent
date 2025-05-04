@@ -136,9 +136,10 @@ def payment_node(state: FlightBookingState) -> FlightBookingState:
             "from_node": "payment_node",
         }
 
-    name = state.passenger_details.get('name')
-    contact = state.passenger_details.get('contact_number')
-    email = state.passenger_details.get('email')
+    print("passenger_details", passenger_details)
+    name = passenger_details.get('name')
+    contact = passenger_details.get('contact')
+    email = passenger_details.get('email')
     payment_link = get_payment_link(
         description=description,
         name=name,
