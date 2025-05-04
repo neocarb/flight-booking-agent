@@ -1,15 +1,9 @@
-import json
 import requests
-from typing import Annotated, List
+from typing import Annotated
 from langchain_core.tools import tool
-from langgraph.types import Command
-from langchain_core.tools.base import InjectedToolCallId
-from langchain_core.messages import ToolMessage
 
-# can tools only return json string or dict? Can they return POJO or other types of objects?
 @tool
 def search_offers(
-    tool_call_id: Annotated[str, InjectedToolCallId],
     origin: Annotated[str, "flight origin city"],
     destination: Annotated[str, "flight destination city"],
     departure_date: Annotated[str,"flight departure date from origin"],
@@ -32,23 +26,17 @@ def search_offers(
         }
 
         response = requests.post(api_url, headers=headers, json=payload)
-
+        
         if response.status_code == 200:
             flights_data = response.json()
-            return Command(
-                update={
-                    "flight_offers": json.dumps(flights_data.get('data')),
-                    "messages": [ToolMessage(flights_data.get('data'), tool_call_id=tool_call_id)]
-                }
-            )
+            return flights_data.get('data')
         else:
-            return Command(update={"messages": [ToolMessage("Failed to fetch flight offers", tool_call_id=tool_call_id)]})
+           return None
     except Exception as e:
-       return Command(update={"messages": [ToolMessage("Unable to fetch flight offers", tool_call_id=tool_call_id)]})
+        return None
 
 @tool
 def get_latest_offer(
-    tool_call_id: Annotated[str, InjectedToolCallId],
     offer_id: Annotated[str, "offer ID"]) -> Annotated[dict, "flight offer details"]:
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
     try:
@@ -65,9 +53,9 @@ def get_latest_offer(
             offer_data = response.json()
             return offer_data.get('data')
         else:
-            return {"error": f"Failed to fetch offer. Status code: {response.status_code}"}
+            return None
     except Exception as e:
-        return {"error": str(e)}
+        return None
     
 @tool
 def collect_passenger_details(
@@ -122,12 +110,3 @@ def get_payment_link(
             return None
     except Exception as e:
        return None
-
-@tool
-def create_flight_booking(
-    selected_offer_id: Annotated[str, "selected offer ID"],
-    payment_details: Annotated[dict, "payment details"],
-    passenger_details: Annotated[dict, "passenger details"],
-    ) -> Annotated[str,"booking reference for the flight booking"]:
-    """Create a flight booking based on the selected offer ID, payment details and passenger details. Returns a booking reference."""
-    return "booking_reference_12345"

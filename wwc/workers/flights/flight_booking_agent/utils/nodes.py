@@ -3,7 +3,7 @@ from flight_booking_agent.utils.state import FlightBookingState
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
 from flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link
-from langchain_core.messages import AIMessage, HumanMessage, BaseMessage,ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 import json
 
 llm = ChatOpenAI(model="gpt-4o")
@@ -65,30 +65,22 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     )
     
     result = validate_flight_offer_agent.invoke(state)
-    print("validate_flight_offer_node result", result)
     
-    selected_offer = None
-    selected_offer_id = None
     # update state with the selected flight offer ID  
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'get_latest_offer'), None)
     tool_message_content = tool_message.content if tool_message else None
     tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
     selected_offer = tool_message_content_dict.get('offer') if tool_message_content_dict else None
     selected_offer_id = selected_offer.get('offerId') if selected_offer else None
-    print("selected_offer", selected_offer)
-    print("selected_offer_id", selected_offer_id)
     
     return {
         "messages": result['messages'],
         "from_node": "validate_flight_offer_node",
         "selected_flight_offer_id": selected_offer_id,  # corrected variable name
-        "selected_flight_offer": str(selected_offer) if selected_offer else None,  # corrected variable name
+        "selected_flight_offer": json.dumps(selected_offer) if selected_offer else None,  # corrected variable name
     }
 
 def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingState:
-    # This node is responsible for collecting passenger details from the user.
-    # It will extract the passenger details from the user's response and update the state accordingly.
-    
     collect_passenger_details_instruction = """
     You goal is to get the user to provide their passenger details for flight booking.
     1. Ask the user for their name, contact number, email, and age.
@@ -122,7 +114,6 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
 
 def payment_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
-    # convert the passenger details to a dictionary
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     if not passenger_details:
         payment_message = AIMessage(content="There is a problem with the payment, please try again.")
@@ -130,8 +121,6 @@ def payment_node(state: FlightBookingState) -> FlightBookingState:
             "messages": [payment_message],
             "from_node": "payment_node",
         }
-
-    print("passenger_details", passenger_details)
     name = passenger_details.get('name')
     contact = passenger_details.get('contact')
     email = passenger_details.get('email')
@@ -149,7 +138,6 @@ def payment_node(state: FlightBookingState) -> FlightBookingState:
             "from_node": "payment_node",
         }
     payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}")
-    # add the payment message to the state 
     return {
         "from_node": "payment_node",
         "messages": [payment_message],
