@@ -87,14 +87,41 @@ def collect_passenger_details(
     }
      
 @tool
-def create_payment_link(
+def get_payment_link(
     description: Annotated[float, "description of the payment"],
     name: Annotated[str, "passenger name for making payment"],  
-    contact_number: Annotated[str, "passenger contact number for making payment"],
+    contact: Annotated[str, "passenger contact number for making payment"],
+    email: Annotated[str, "passenger email for making payment"],
     ) -> Annotated[str,"url to open the payment page for making the payment"]:
     """Process payment for the flight booking. Returns a URL to open the payment page for the passenger to make the payment."""
-    
-    return "https://rzp.io/rzp/BLso4cHo"
+    try:
+        # Example API endpoint and API key (replace with your real ones)
+        api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/razorpay/createPaymentLink"
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        customer = {
+            "name": name,
+            "contact": contact,
+            "email": email
+        }
+        payload = {
+            "description": description,
+            "customer": customer,
+        }
+
+        response = requests.post(api_url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            data = response.json()
+            payment_url = data.get('data', {}).get('short_url')
+            return payment_url
+        else:
+            return None
+    except Exception as e:
+       return None
 
 @tool
 def create_flight_booking(
