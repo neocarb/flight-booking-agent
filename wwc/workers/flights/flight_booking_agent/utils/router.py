@@ -36,13 +36,9 @@ def validate_flight_offer_router(state: FlightBookingState) -> NodeType:
     
 def collect_passenger_details_router(state: FlightBookingState) -> NodeType:
     if 'passenger_details' in state and state['passenger_details']:
-        return '__end__'
+        return 'payment_node'
     return 'human_node'
     
 def human_router(state: FlightBookingState) -> NodeType:
     # return the node which passed the human node
     return state['from_node']
-        
-     
-     
-    
