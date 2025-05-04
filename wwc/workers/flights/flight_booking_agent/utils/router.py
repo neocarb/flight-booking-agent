@@ -11,7 +11,7 @@ NodeType = Literal['search_flight_offers_node', 'human_node', 'validate_flight_o
 def search_flight_offers_router(state: FlightBookingState) -> NodeType:
     logger.info("Entering search_flight_offers_router")
     print("state", state)
-    if 'flight_offers' in state and len(state['flight_offers']) != 0:
+    if 'flight_offers' in state and state['flight_offers']:
         return 'validate_flight_offer_node'
     return 'human_node'
     
