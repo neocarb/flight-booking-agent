@@ -1,7 +1,6 @@
 {
-  "dependencies": ["./wwc/workers/email", "./wwc/supervisor"],
+  "dependencies": ["./wwc/supervisor"],
   "graphs": {
-    "email_management_agent": "./wwc/workers/email/email_management_agent/agent.py:email_management_graph",
     "supervisor_agent": "./wwc/supervisor/supervisor_agent/agent.py:supervisor_graph"
   },
   "env": "./.env"
