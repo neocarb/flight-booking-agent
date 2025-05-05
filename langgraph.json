@@ -1,8 +1,7 @@
 {
-  "dependencies": ["./wwc/workers/flights", "./wwc/workers/email", "./wwc/supervisor"],
+  "dependencies": ["./wwc/workers/email", "./wwc/supervisor"],
   "graphs": {
     "email_management_agent": "./wwc/workers/email/email_management_agent/agent.py:email_management_graph",
-    "flight_booking_agent": "./wwc/workers/flights/flight_booking_agent/agent.py:flight_booking_graph",
     "supervisor_agent": "./wwc/supervisor/supervisor_agent/agent.py:supervisor_graph"
   },
   "env": "./.env"
