@@ -5,3 +5,4 @@ langgraph
 langsmith
 langchain-openai
 langchain_core
+langgraph-supervisor
