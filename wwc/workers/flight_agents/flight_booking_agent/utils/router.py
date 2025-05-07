@@ -1,6 +1,7 @@
-from flight_booking_agent.utils.state import FlightBookingState
-from typing import Literal
 import logging
+from typing import Literal
+
+from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
 
 logger = logging.getLogger(__name__)
 
