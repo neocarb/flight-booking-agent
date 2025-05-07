@@ -1,7 +1,0 @@
-langchain-google-community
-langchain-google-community[gmail]
-langchain
-langgraph
-langsmith
-langchain-openai
-langchain_core

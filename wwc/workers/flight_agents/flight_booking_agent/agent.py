@@ -65,12 +65,12 @@ flight_booking_builder.add_conditional_edges(
 )
 
 checkpointer = MemorySaver()
-flight_booking_graph = flight_booking_builder.compile(checkpointer=checkpointer, name="flight_booking_graph")
+flight_booking_agent = flight_booking_builder.compile(checkpointer=checkpointer, name="flight_booking_agent")
 
 '''
 thread_config = {"configurable": {"thread_id": 30}}
 input_dict = {"messages": [HumanMessage(content="Heyyy")]}
-for event in graph.stream(
+for event in flight_booking_agent.stream(
         input_dict,
         config=thread_config,
         stream_mode="values",

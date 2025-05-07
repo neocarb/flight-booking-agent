@@ -1,5 +1,5 @@
 {
-  "dependencies": ["./wwc/supervisor"],
+  "dependencies": ["."],
   "graphs": {
     "supervisor_agent": "./wwc/supervisor/supervisor_agent/agent.py:supervisor_graph"
   },

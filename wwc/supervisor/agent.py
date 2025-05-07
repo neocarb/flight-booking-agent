@@ -1,11 +1,11 @@
 from langchain_openai import ChatOpenAI
 from langgraph_supervisor import create_supervisor
-from supervisor_agent.agents.email.email_management_agent.agent import email_management_graph
+from wwc.workers.email_agent.agent import email_agent
 
 model = ChatOpenAI(model="gpt-4o")
 # Create supervisor workflow
 workflow = create_supervisor(
-    agents=[email_management_graph],
+    agents=[email_agent],
     model=model,
     prompt=(
         "You are a team supervisor managing a flight_booking_graph and email_manager_graph as tools"
