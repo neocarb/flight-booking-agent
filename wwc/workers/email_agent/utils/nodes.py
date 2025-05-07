@@ -28,8 +28,8 @@ def email_agent_node(state: EmailManagerState):
         llm,
         tools=tools + [get_user_input],
         prompt=email_manager_instruction,
-        interrupt_before=["tools"]
     )
     
     result = email_manager_agent.invoke({"messages": state['messages']})
+    print("result: ", result)
     return Command(update={"messages": result["messages"]}, goto="__end__")
