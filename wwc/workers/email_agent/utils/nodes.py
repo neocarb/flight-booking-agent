@@ -5,8 +5,8 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import interrupt
 
-from email_agent.utils.state import EmailManagerState
-from email_agent.utils.tools import tools
+from wwc.workers.email_agent.utils.state import EmailManagerState
+from wwc.workers.email_agent.utils.tools import tools
 
 llm = ChatOpenAI(model="gpt-4o")
 

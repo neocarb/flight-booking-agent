@@ -16,4 +16,4 @@ workflow = create_supervisor(
 )
 
 # Compile and run
-supervisor_graph = workflow.compile(name="supervisor_graph")
+supervisor_agent = workflow.compile(name="supervisor_agent")

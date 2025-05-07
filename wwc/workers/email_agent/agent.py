@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, START
-from email_agent.utils.state import EmailManagerState
-from email_agent.utils.nodes import email_manager_node, email_human_node
+from wwc.workers.email_agent.utils.state import EmailManagerState
+from wwc.workers.email_agent.utils.nodes import email_manager_node, email_human_node
 
 email_agent_builder = StateGraph(EmailManagerState)
 email_agent_builder.add_node("email_manager_node", email_manager_node)

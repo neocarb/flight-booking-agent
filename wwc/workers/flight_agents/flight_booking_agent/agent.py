@@ -1,13 +1,14 @@
 from langgraph.graph import StateGraph, START, END
-from flight_booking_agent.utils.state import FlightBookingState
-from flight_booking_agent.utils.router import (
+from langgraph.checkpoint.memory import MemorySaver
+
+from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
+from wwc.workers.flight_agents.flight_booking_agent.utils.router import (
     search_flight_offers_router, 
     validate_flight_offer_router, 
     human_router, 
     collect_passenger_details_router
 )
-from langgraph.checkpoint.memory import MemorySaver
-from flight_booking_agent.utils.nodes import (
+from wwc.workers.flight_agents.flight_booking_agent.utils.nodes import (
     search_flight_offers_node,
     human_node,
     validate_flight_offer_node,

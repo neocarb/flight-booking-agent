@@ -1,10 +1,12 @@
+import json
+
 from langchain_openai import ChatOpenAI
-from flight_booking_agent.utils.state import FlightBookingState
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
-from flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-import json
+
+from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
+from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link
 
 llm = ChatOpenAI(model="gpt-4o")
 
