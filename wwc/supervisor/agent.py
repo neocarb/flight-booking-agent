@@ -10,8 +10,8 @@ workflow = create_supervisor(
     model=model,
     prompt=(
         "You are a team supervisor managing a flight_booking_graph and email_manager_graph as tools"
-        "For anything related to flight booking, use flight_booking_graph tool"
-        "For anything related to email, use email_management_graph tool"
+        "For anything related to flight booking, use flight_booking_agent tool"
+        "For anything related to email, use email_agent tool"
     ),
     output_mode="full_history"
 )

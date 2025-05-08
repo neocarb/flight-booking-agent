@@ -30,7 +30,7 @@ def email_agent_node(state: EmailManagerState):
         prompt=email_manager_instruction,
     )
     
-    print("EmailManagerState: ", EmailManagerState)
+    print("state['messages']: ", state['messages'])
     result = email_manager_agent.invoke({"messages": state['messages']})
     print("result: ", result)
     return Command(update={"messages": result["messages"]}, goto="__end__")
