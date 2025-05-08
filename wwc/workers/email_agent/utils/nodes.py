@@ -20,8 +20,8 @@ llm = ChatOpenAI(model="gpt-4o")
 
 def email_agent_node(state: EmailManagerState):
     email_manager_instruction = """
-    You are an expert email manager. Your task is to help the user manage their email.
-    1. If you need any additional information to follow the instructioins, use the get_user_input tool to ask the user.
+    You are an expert email manager. Your task is to help the user manage their email, inlcuding searching and sending.
+    If you need any information to help the user, you are only allowed to use the get_user_input tool, nothing else, with the question.
     Be professional, concise, and user-friendly. Ensure your final response follows the exact format for automated parsing.
     """
     email_manager_agent = create_react_agent(
