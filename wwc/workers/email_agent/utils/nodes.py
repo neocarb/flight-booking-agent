@@ -38,7 +38,11 @@ def email_agent_node(state: EmailManagerState) -> Command[Literal["__end__", "hu
     result = email_manager_agent.invoke(state)
     
     # check for tool calls by email agent, if tool call, then goto end else goto human node
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and "mail" in msg.name), None)
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and 
+                         (msg.name == 'search_gmail' or 
+                          msg.name == 'send_gmail_message' or 
+                          msg.name == 'get_gmail_message')), None)
+    
     logger.info("tool_message: %s", tool_message)  
     if tool_message:
         return Command(update={"messages": result["messages"]}, goto="__end__")

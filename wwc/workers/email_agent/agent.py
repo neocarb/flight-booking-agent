@@ -7,6 +7,6 @@ email_agent_builder = StateGraph(EmailManagerState)
 email_agent_builder.add_node("email_agent_node", email_agent_node)
 email_agent_builder.add_node("human_node", human_node)
 email_agent_builder.add_edge(START, "email_agent_node")
+email_agent_builder.add_edge("human_node", "email_agent_node")
 
-checkpointer = MemorySaver()
-email_agent = email_agent_builder.compile(checkpointer=checkpointer, name="email_agent")
+email_agent = email_agent_builder.compile(name="email_agent")

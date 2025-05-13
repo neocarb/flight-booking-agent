@@ -13,7 +13,7 @@ workflow = create_supervisor(
         "For anything related to flight booking, use flight_booking_agent tool"
         "For anything related to email, use email_agent tool"
     ),
-    output_mode="last_message"
+    output_mode="full_history"
 )
 
 # Compile and run
