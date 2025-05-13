@@ -31,7 +31,7 @@ def email_agent_node(state: EmailManagerState):
     )
     
     print("state['messages']: ", state['messages'])
-    result = email_manager_agent.invoke({"messages": state['messages']})
+    result = email_manager_agent.invoke(state)
     
     # check for tool calls, if tool call, then goto end else goto human node
     llm_message = result["messages"][-1]
