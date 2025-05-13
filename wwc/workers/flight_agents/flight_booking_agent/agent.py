@@ -66,7 +66,7 @@ flight_booking_builder.add_conditional_edges(
 )
 
 checkpointer = MemorySaver()
-flight_booking_agent = flight_booking_builder.compile(checkpointer=checkpointer, name="flight_booking_agent")
+flight_booking_agent = flight_booking_builder.compile(name="flight_booking_agent")
 
 '''
 thread_config = {"configurable": {"thread_id": 30}}

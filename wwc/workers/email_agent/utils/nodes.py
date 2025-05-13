@@ -1,5 +1,6 @@
 from typing import Literal
-from langchain_core.messages import HumanMessage
+import logging
+from langchain_core.messages import HumanMessage, ToolMessage
 from langgraph.types import Command
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
@@ -7,36 +8,46 @@ from langgraph.types import interrupt
 
 from wwc.workers.email_agent.utils.state import EmailManagerState
 from wwc.workers.email_agent.utils.tools import tools
+from wwc.workers.email_agent.utils.tools import get_user_input
 
 llm = ChatOpenAI(model="gpt-4o")
+logger = logging.getLogger(__name__)
 
-# human node
-def email_human_node(state: EmailManagerState) -> Command[Literal["email_manager_node"]]:
-    # get user input
+# # human node
+def human_node(state: EmailManagerState) -> Command[Literal["email_agent_node"]]:
+    logger.info("in human_node")
     user_input = interrupt("Enter your input: ")
-    # return user input
-    return Command(update={"messages": [HumanMessage(content=user_input)]}, goto="email_manager_node")
+    logger.info("user_input: %s", user_input)
+    human_message = HumanMessage(content=user_input)
+    return Command(update={"messages": [human_message]}, goto="email_agent_node")
 
-def email_manager_node(state: EmailManagerState) -> Command[Literal["__end__", "email_human_node"]]:
+def email_agent_node(state: EmailManagerState) -> Command[Literal["__end__", "human_node"]]:
+    logger.info("in email_agent_node")
     email_manager_instruction = """
-    You are an expert email manager. Your task is to help the user manage their email.
-    1. If you need any additional information to proceed with the tool use, prefix your message with `INPUT:` and ask the user.
-    - Example:  
-        INPUT: Please provide the subject of the email
+    You are an expert email manager. Your task is to help the user manage their email, including searching and sending emails.
+    You will ask the user for all the necessary information to search for emails or send emails.
     Be professional, concise, and user-friendly. Ensure your final response follows the exact format for automated parsing.
     """
     email_manager_agent = create_react_agent(
         llm,
-        tools=[tools[1], tools[2], tools[3]],
+        tools=tools,
         prompt=email_manager_instruction,
-        interrupt_before=["tools"]
     )
     
-    result = email_manager_agent.invoke({"messages": state['messages']})
-    llm_message = result["messages"][-1]
+    logger.info("state['messages']: %s ", state['messages'])
+    result = email_manager_agent.invoke(state)
     
-    if "INPUT" in llm_message.content:
-            command = Command(update={"messages": [llm_message]}, goto="email_human_node")
-            return command
-        
-    return Command(update={"messages": result["messages"]}, goto="__end__")
+    # check for tool calls by email agent, if tool call, then goto end else goto human node
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and 
+                         (msg.name == 'search_gmail' or 
+                          msg.name == 'send_gmail_message' or 
+                          msg.name == 'get_gmail_message')), None)
+    
+    logger.info("tool_message: %s", tool_message)  
+    if tool_message:
+        return Command(update={"messages": result["messages"]}, goto="__end__")
+    else:
+        return Command(update={"messages": result["messages"]}, goto="human_node")
+    
+
+    
