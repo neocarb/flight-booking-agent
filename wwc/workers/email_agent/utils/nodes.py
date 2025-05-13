@@ -16,12 +16,13 @@ def human_node(state: EmailManagerState) -> Command[Literal["email_agent_node"]]
     print("in human_node")
     user_input = interrupt("Enter your input: ")
     print("user_input: ", user_input)
-    return Command(update={"messages": [HumanMessage(content=user_input)]}, goto="email_agent_node")
+    human_message = HumanMessage(content=user_input)
+    return Command(update={"messages": [human_message]}, goto="email_agent_node")
 
 def email_agent_node(state: EmailManagerState) -> Command[Literal["__end__", "human_node"]]:
     print("in email_agent_node")
     email_manager_instruction = """
-    You are an expert email manager. Your task is to help the user manage their email, inlcuding searching and sending emails.
+    You are an expert email manager. Your task is to help the user manage their email, including searching and sending emails.
     You will ask the user for all the necessary information to search for emails or send emails.
     Be professional, concise, and user-friendly. Ensure your final response follows the exact format for automated parsing.
     """
