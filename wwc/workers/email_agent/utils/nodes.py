@@ -9,6 +9,7 @@ from langgraph.types import interrupt
 from wwc.workers.email_agent.utils.state import EmailManagerState
 from wwc.workers.email_agent.utils.tools import tools
 from wwc.workers.email_agent.utils.tools import get_user_input
+from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 llm = ChatOpenAI(model="gpt-4o")
 logger = logging.getLogger(__name__)
@@ -16,8 +17,30 @@ logger = logging.getLogger(__name__)
 # # human node
 def human_node(state: EmailManagerState) -> Command[Literal["email_agent_node"]]:
     logger.info("in human_node")
-    last_ai_message = next((msg for msg in state["messages"] if isinstance(msg, AIMessage)), None)
-    user_input = interrupt(last_ai_message.content)
+    logger.info("state['messages']: %s ", state['messages'])
+    
+    last_ai_message = state['messages'][-1].content
+    logger.info("last_ai_message: %s", last_ai_message)
+    
+    
+    request = HumanInterrupt(
+        action_request=ActionRequest(
+            action=last_ai_message,  # Action name for clarity in your context
+            args={}                        # No initial args; user will provide input
+        ),
+        config=HumanInterruptConfig(
+            allow_ignore=False,
+            allow_respond=True,     # Allowing textual response
+            allow_edit=False,
+            allow_accept=False
+        ),
+        description=last_ai_message
+    )
+    response = interrupt([request])[0]
+    logger.info("response: %s", response)
+    user_input = response.get("args", "")
+    
+    # user_input = interrupt(last_ai_message.content)
     logger.info("user_input: %s", user_input)
     human_message = HumanMessage(content=user_input)
     return Command(update={"messages": [human_message]}, goto="email_agent_node")

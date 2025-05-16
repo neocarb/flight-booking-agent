@@ -25,7 +25,7 @@ def create_task_description_handoff_tool(
         # this is populated by the supervisor LLM
         task_description: Annotated[
             str,
-            "Description of what the next agent should do, including all of the relevant context.",
+            "Description of what the next agent should do, derived from all the context and messages.",
         ],
         # these parameters are ignored by the LLM
         state: Annotated[MessagesState, InjectedState],
@@ -55,6 +55,7 @@ workflow_v2 = create_supervisor(
         "You are a team supervisor managing a flight_booking_graph and email_manager_graph as tools"
         "For anything related to flight booking, use flight_booking_agent tool"
         "For anything related to email, use email_agent tool"
+        "Provide apptropriate task description for the next agent"
     ),
     output_mode="full_history"
 )

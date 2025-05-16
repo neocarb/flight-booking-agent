@@ -1,5 +1,5 @@
 import json
-
+import logging
 from langchain_openai import ChatOpenAI
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
@@ -7,12 +7,37 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
 from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link
+from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 llm = ChatOpenAI(model="gpt-4o")
+logger = logging.getLogger(__name__)
 
 def human_node(state: FlightBookingState):
     # get user input
-    user_input = interrupt("Enter your input: ")
+    last_ai_message = state['messages'][-1].content
+    logger.info("last_ai_message: %s", last_ai_message)
+    
+    
+    request = HumanInterrupt(
+        action_request=ActionRequest(
+            action=last_ai_message,  # Action name for clarity in your context
+            args={}                        # No initial args; user will provide input
+        ),
+        config=HumanInterruptConfig(
+            allow_ignore=False,
+            allow_respond=True,     # Allowing textual response
+            allow_edit=False,
+            allow_accept=False
+        ),
+        description=last_ai_message
+    )
+    response = interrupt([request])[0]
+    logger.info("response: %s", response)
+    user_input = response.get("args", "")
+    
+    # user_input = interrupt(last_ai_message.content)
+    logger.info("user_input: %s", user_input)
+    human_message = HumanMessage(content=user_input)
     # create a human message
     human_message = HumanMessage(content=user_input)
     return {
