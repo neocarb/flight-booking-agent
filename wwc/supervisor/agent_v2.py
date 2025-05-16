@@ -8,7 +8,9 @@ from langgraph.graph import MessagesState
 from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
 from langgraph.types import Send
+import logging
 
+logger = logging.getLogger(__name__)
 METADATA_KEY_HANDOFF_DESTINATION = "__handoff_destination"
 
 # define custom handoff tool
@@ -30,6 +32,7 @@ def create_task_description_handoff_tool(
     ) -> Command:
         task_description_message = {"role": "user", "content": task_description}
         agent_input = {**state, "messages": [task_description_message]}
+        logger.info("agent_input: %s", agent_input)
         return Command(
             goto=[Send(agent_name, agent_input)],
             graph=Command.PARENT,
