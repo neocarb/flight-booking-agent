@@ -1,6 +1,6 @@
 from typing import Literal
 import logging
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langgraph.types import Command
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 # # human node
 def human_node(state: EmailManagerState) -> Command[Literal["email_agent_node"]]:
     logger.info("in human_node")
-    user_input = interrupt("Enter your input: ")
+    last_ai_message = next((msg for msg in state["messages"] if isinstance(msg, AIMessage)), None)
+    user_input = interrupt(last_ai_message.content)
     logger.info("user_input: %s", user_input)
     human_message = HumanMessage(content=user_input)
     return Command(update={"messages": [human_message]}, goto="email_agent_node")

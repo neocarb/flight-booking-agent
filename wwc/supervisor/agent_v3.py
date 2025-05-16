@@ -50,12 +50,11 @@ llm = ChatOpenAI(model="gpt-4o")
 teams_supervisor_node = make_supervisor_node(llm, ["email_team", "flight_booking_team"])
 
 def call_email_team(state: State) -> Command[Literal["supervisor"]]:
+    logger.info("before state: %s", state)
     response = email_agent.invoke({"messages": state["messages"][-1]})
     logger.info("response: %s", response)
     return Command(
-        update={
-            "messages": [response["messages"]]
-        },
+        update={"messages": response["messages"]},
         goto="supervisor",
     )
 
