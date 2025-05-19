@@ -56,6 +56,7 @@ workflow_v2 = create_supervisor(
         "For anything related to flight booking, use flight_booking_agent tool"
         "For anything related to email, use email_agent tool"
         "Provide apptropriate task description for the next agent"
+        "if an agent fails, never try again, just handoff to the next agent"
     ),
     output_mode="full_history"
 )

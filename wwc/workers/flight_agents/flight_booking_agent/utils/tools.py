@@ -1,6 +1,10 @@
 import requests
+import logging
 from typing import Annotated
 from langchain_core.tools import tool
+
+
+logger = logging.getLogger(__name__)
 
 @tool
 def search_offers(
@@ -11,7 +15,7 @@ def search_offers(
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
         # Example API endpoint and API key (replace with your real ones)
-        api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/duffel/searchFlight"
+        api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/booking/searchFlight"
 
         headers = {
             "Content-Type": "application/json"
@@ -26,7 +30,8 @@ def search_offers(
         }
 
         response = requests.post(api_url, headers=headers, json=payload)
-        
+        logger.info("response: %s", response.json())
+
         if response.status_code == 200:
             flights_data = response.json()
             return flights_data.get('data')
@@ -41,7 +46,7 @@ def get_latest_offer(
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
     try:
         # Example API endpoint and API key (replace with your real ones)
-        api_url = f"https://flightbookingserver-458112.ue.r.appspot.com/api/duffel/getOffer?offer_id={offer_id}"
+        api_url = f"https://flightbookingserver-458112.ue.r.appspot.com/api/booking/getOffer?offer_id={offer_id}"
 
         headers = {
             "Content-Type": "application/json"
