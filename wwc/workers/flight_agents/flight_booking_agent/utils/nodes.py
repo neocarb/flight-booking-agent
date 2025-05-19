@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
-from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link
+from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking
 from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 llm = ChatOpenAI(model="gpt-4o")
@@ -20,7 +20,7 @@ def human_node(state: FlightBookingState):
     
     request = HumanInterrupt(
         action_request=ActionRequest(
-            action=last_ai_message,  # Action name for clarity in your context
+            action="Provide input",  # Action name for clarity in your context
             args={}                        # No initial args; user will provide input
         ),
         config=HumanInterruptConfig(
@@ -29,7 +29,7 @@ def human_node(state: FlightBookingState):
             allow_edit=False,
             allow_accept=False
         ),
-        description=last_ai_message
+        description="last_ai_message"
     )
     response = interrupt([request])[0]
     logger.info("response: %s", response)
@@ -113,7 +113,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     1. Ask the user for their name, contact number, email, and age.
     2. Once you have all the details, present them in a structured format for the user to review
     3. Only nce the user confirms and finalises the details, call the collect_passenger_details tool to collect the passenger details. never call the collect_passenger_details tool without all the details.
-    4. After you are done, payment node will be called to process the payment.
+    4. After you are done, create flight booking node will be called to handle payment and create the booking
     """
     
     collect_passenger_details_agent = create_react_agent(
@@ -167,6 +167,38 @@ def payment_node(state: FlightBookingState) -> FlightBookingState:
     payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}")
     return {
         "from_node": "payment_node",
+        "messages": [payment_message],
+        "payment_link": payment_link,
+    }
+    
+def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
+    description = "Flight booking payment"
+    offer_id = state['selected_flight_offer_id']
+    passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
+    logger.info("passenger_details %s", passenger_details)
+    if not passenger_details:
+        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        return {
+            "messages": [payment_message],
+            "from_node": "create_flight_booking_node",
+        }
+    name = passenger_details.get('name')
+    contact = passenger_details.get('contact')
+    email = passenger_details.get('email')
+    
+    
+    
+    payment_link = create_flight_booking(description, name, contact, email, offer_id, contact, email, "07/12/1998", "mr", "m", name, name)
+    print("payment_link", payment_link)
+    if not payment_link:
+        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        return {
+            "messages": [payment_message],
+            "from_node": "create_flight_booking_node",
+        }
+    payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}")
+    return {
+        "from_node": "create_flight_booking_node",
         "messages": [payment_message],
         "payment_link": payment_link,
     }
