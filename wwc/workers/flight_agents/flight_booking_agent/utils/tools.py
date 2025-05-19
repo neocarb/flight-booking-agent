@@ -1,6 +1,10 @@
 import requests
+import logging
 from typing import Annotated
 from langchain_core.tools import tool
+
+
+logger = logging.getLogger(__name__)
 
 @tool
 def search_offers(
@@ -11,7 +15,7 @@ def search_offers(
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
         # Example API endpoint and API key (replace with your real ones)
-        api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/duffel/searchFlight"
+        api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/booking/searchFlight"
 
         headers = {
             "Content-Type": "application/json"
@@ -26,7 +30,8 @@ def search_offers(
         }
 
         response = requests.post(api_url, headers=headers, json=payload)
-        
+        logger.info("response: %s", response.json())
+
         if response.status_code == 200:
             flights_data = response.json()
             return flights_data.get('data')
@@ -41,7 +46,7 @@ def get_latest_offer(
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
     try:
         # Example API endpoint and API key (replace with your real ones)
-        api_url = f"https://flightbookingserver-458112.ue.r.appspot.com/api/duffel/getOffer?offer_id={offer_id}"
+        api_url = f"https://flightbookingserver-458112.ue.r.appspot.com/api/booking/getOffer?offer_id={offer_id}"
 
         headers = {
             "Content-Type": "application/json"
@@ -110,3 +115,55 @@ def get_payment_link(
             return None
     except Exception as e:
        return None
+   
+
+def create_flight_booking(
+    description: Annotated[float, "description of the payment"],
+    billing_customer_name: Annotated[str, "passenger name for making payment"],  
+    billing_customer_contact: Annotated[str, "passenger contact number for making payment"],
+    billing_customer_email: Annotated[str, "passenger email for making payment"],
+    booking_offer_id: Annotated[str, "offer id to create booking for"],
+    booking_passenger_phone_number: Annotated[str, "offer id to create booking for"],
+    booking_passenger_email,
+    booking_passenger_born_on,
+    booking_passenger_title,
+    booking_passenger_gender,
+    booking_passenger_family_name,
+    booking_passenger_given_name
+    ) -> Annotated[str,"url to open the payment page for making the payment"]:
+    """Process payment for the flight booking. Returns a URL to open the payment page for the passenger to make the payment."""
+    try:
+        # Example API endpoint and API key (replace with your real ones)
+        api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/booking/create"
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "description": description,
+            "billing_customer_name": billing_customer_name,
+            "billing_customer_contact": billing_customer_contact,
+            "billing_customer_email": billing_customer_email,
+            "booking_offer_id": booking_offer_id,
+            "booking_passenger_phone_number": booking_passenger_phone_number,
+            "booking_passenger_email": booking_passenger_email,
+            "booking_passenger_born_on": booking_passenger_born_on,
+            "booking_passenger_title": booking_passenger_title,
+            "booking_passenger_gender": booking_passenger_gender,
+            "booking_passenger_family_name": booking_passenger_family_name,
+            "booking_passenger_given_name": booking_passenger_given_name   
+        }
+        logger.info("payload: %s", payload)
+        response = requests.post(api_url, headers=headers, json=payload)
+        logger.info("response: %s", response.json())
+
+        if response.status_code == 200:
+            data = response.json()
+            payment_url = data.get('data', {}).get('payment_link')
+            return payment_url
+        else:
+            return None
+    except Exception as e:
+       return None
+   

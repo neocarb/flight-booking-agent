@@ -12,15 +12,15 @@ from wwc.workers.flight_agents.flight_booking_agent.utils.nodes import (
     search_flight_offers_node,
     human_node,
     validate_flight_offer_node,
-    payment_node,
-    collect_passenger_details_node
+    collect_passenger_details_node,
+    create_flight_booking_node
 )
 
 flight_booking_builder = StateGraph(FlightBookingState)
 flight_booking_builder.add_node("search_flight_offers_node", search_flight_offers_node)
 flight_booking_builder.add_node("validate_flight_offer_node", validate_flight_offer_node)
 flight_booking_builder.add_node("collect_passenger_details_node", collect_passenger_details_node)
-flight_booking_builder.add_node("payment_node", payment_node)
+flight_booking_builder.add_node("create_flight_booking_node", create_flight_booking_node)
 flight_booking_builder.add_node("human_node", human_node)
 
 # flight_booking_builder.add_node("payment_node", make_payment_node)
@@ -49,11 +49,11 @@ flight_booking_builder.add_conditional_edges(
     collect_passenger_details_router,
     {
         "human_node": "human_node",
-        "payment_node": "payment_node",
+        "create_flight_booking_node": "create_flight_booking_node",
     }
     )
 
-flight_booking_builder.add_edge("payment_node", END)
+flight_booking_builder.add_edge("create_flight_booking_node", END)
 
 flight_booking_builder.add_conditional_edges(
     "human_node",
