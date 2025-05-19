@@ -100,6 +100,8 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     selected_offer = tool_message_content_dict.get('offer') if tool_message_content_dict else None
     selected_offer_id = selected_offer.get('offerId') if selected_offer else None
     
+    #TODO: route based on wether flight offer is valid
+    
     return {
         "messages": result['messages'],
         "from_node": "validate_flight_offer_node",
