@@ -2,15 +2,16 @@ import requests
 import logging
 from typing import Annotated
 from langchain_core.tools import tool
-
+from datetime import datetime
+from langchain.tools import Tool
 
 logger = logging.getLogger(__name__)
 
 @tool
 def search_offers(
-    origin: Annotated[str, "flight origin city"],
-    destination: Annotated[str, "flight destination city"],
-    departure_date: Annotated[str,"flight departure date from origin"],
+    origin: Annotated[str, "IATA code of flight origin city"],
+    destination: Annotated[str, "IATA code flight destination city"],
+    departure_date: Annotated[str,"flight departure date from origin, format YYYY-MM-DD"],
     passenger_age: Annotated[str,"if passenger is above 18 then adult otherwise age"]):
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
@@ -167,3 +168,8 @@ def create_flight_booking(
     except Exception as e:
        return None
    
+   
+@tool
+def get_today_date() -> Annotated[str, "todays date in iso format"]:
+    """returns todays date"""
+    return datetime.now().isoformat()
