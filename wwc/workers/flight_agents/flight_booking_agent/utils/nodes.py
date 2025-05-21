@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
-from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking
+from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date
 from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 llm = ChatOpenAI(model="gpt-4o")
@@ -47,14 +47,17 @@ def human_node(state: FlightBookingState):
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_instruction = """
     You are a helpful and knowledgeable flight booking assistant. Your goal is to help the user search for flight offers based on their preferences.
+    You can only book one way flights for one passenger.
     You will ask they user for all the necessary information to search for flight offers.
     Only once you have all the information, you will call the search_offers tool to get the flight offers.
     You will then present the user with the flight offers from the search_offers tool in a beautiful format after which the validate_flight_offer_node will take offer to ask the user for the chosen flight offer and validate the offer.
+    Do not say anything after searching for the offer.
+    Never call tools in parallel.
     Keep your tone helpful, professional, and concise. If any information is ambiguous, ask clarifying questions. 
     """
     search_flight_offers_agent = create_react_agent(
         llm,
-        tools=[search_offers],
+        tools=[search_offers, get_today_date],
         prompt=search_flight_offers_instruction
     )
     
@@ -81,8 +84,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     2.1. Use the get_latest_offer tool to fetch the latest details of the offer using the offer ID provided by the user.
     2.2. Check if any of the offer details have changed compared to the original offer details.
     3. If the offer is no longer valid, inform the user and ask them to choose a new offer. Validate the new offer again as per step 2.
-    4. If the offer is valid, ask the user to confirm if they want to proceed with the offer.
-    5. if the user confirms then move on to the collect_passenger_details_node.
+    4. If the offer is valid, move on to the collect_passenger_details_node.
     """
     
     validate_flight_offer_agent = create_react_agent(
@@ -114,8 +116,8 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     You goal is to get the user to provide their passenger details for flight booking.
     1. Ask the user for their name, contact number, email, and age.
     2. Once you have all the details, present them in a structured format for the user to review
-    3. Only nce the user confirms and finalises the details, call the collect_passenger_details tool to collect the passenger details. never call the collect_passenger_details tool without all the details.
-    4. After you are done, create flight booking node will be called to handle payment and create the booking
+    3. Only once the user confirms and finalises the details, call the collect_passenger_details tool to collect the passenger details. never call the collect_passenger_details tool without all the details.
+    4. After you are done, create flight booking node will be called to handle payment and create the booking automatically.
     """
     
     collect_passenger_details_agent = create_react_agent(
