@@ -12,6 +12,17 @@ from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInt
 llm = ChatOpenAI(model="gpt-4o")
 logger = logging.getLogger(__name__)
 
+def build_agent_prompt(base_instruction: str, step_number: int, previous_step: str, next_step: str) -> str:
+    flow_context = f"""
+Context: You are step {step_number} in a multi-step flight booking process.
+- Previous step: {previous_step}
+- Next step: {next_step}
+Your goal is to generate natural, flowing responses that feel like part of a single conversation. 
+Avoid robotic transitions. Refer casually to earlier steps where appropriate.
+"""
+    return base_instruction.strip() + "\n" + flow_context.strip()
+
+
 def human_node(state: FlightBookingState):
     # get user input
     last_ai_message = state['messages'][-1].content
@@ -44,22 +55,28 @@ def human_node(state: FlightBookingState):
         "messages": [human_message]
     }
 
+# stop child from making a booking; Handle child
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_instruction = """
-    You are a helpful and knowledgeable flight booking assistant. Your goal is to help the user search for flight offers based on their preferences.
-    You can only book one way flights for one passenger.
-    You will ask they user for all the necessary information to search for flight offers.
-    Only once you have all the information, you will call the search_offers tool to get the flight offers.
-    You will then present the user with the flight offers, always including the offer_id, from the search_offers tool in a beautiful format.
-    After you, the validate_flight_offer_node will ask the user to choose one of the flight offer ids presented by you.
-    Do not say anything after searching for the offer.
-    Never call tools in parallel.
-    Keep your tone helpful, professional, and concise. If any information is ambiguous, ask clarifying questions. 
+    You are a professional flight booking assistant helping users search for one-way flights for a single passenger.
+    Your job is to collect all required information to search for flight offers:
+    - Departure and destination airports or cities
+    - Travel date (if needed, use the `get_today_date` tool to get the todays date)
+    - if the passenger is an adult. Anone above the age of 18 is considered an adult.
+
+    Only when you have all the required information, call the `search_offers` tool. Do not call any tools in parallel.
+
+    Once you get the offers:
+    - Present the options clearly, with key details (airline, departure time, price) and the `offer_id` for each.
+    - Use bullet points or a table for easy reading.
+    - After displaying the results, get the user to choose one of the offers.
+
+    Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
     search_flight_offers_agent = create_react_agent(
         llm,
         tools=[search_offers, get_today_date],
-        prompt=search_flight_offers_instruction
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Select flight offer and see if it is still valid")
     )
     
     result = search_flight_offers_agent.invoke(state)
@@ -79,19 +96,22 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     # It will extract the flight ID from the user's response and update the state accordingly.
     
     validate_flight_offer_instruction = """
-    You goal is to get the user to confirm their selected flight offer.
-    1. If the user has not provided a offer ID, ask them to choose a flight offer to proceed with.DO NOT MAKE ANY ASSUMPTIONS ABOUT THE OFFER
-    2. If the user has already provided a offer ID, validate if all the details of the offer are valid. TO validate follow the steps below
-    2.1. Use the get_latest_offer tool to fetch the latest details of the offer using the offer ID provided by the user.
-    2.2. Check if any of the offer details have changed compared to the original offer details.
-    3. If the offer is no longer valid, inform the user and ask them to choose a new offer. Validate the new offer again as per step 2.
-    4. If the offer is valid, move on to the collect_passenger_details_node.
+    You are validating the user's selected flight offer to ensure it is still available and accurate.
+
+    Follow these steps:
+    1. If the user has not provided an `offer_id`, ask them to choose one of the flight offers.
+    2. If they have provided an `offer_id`, use the `get_latest_offer` tool to fetch the latest details.
+    3. Compare the new offer details with the originally displayed ones:
+    - If there are changes or the offer is no longer valid, inform the user and ask them to pick a different offer. Restart validation.
+    - If the offer is unchanged and valid, say "Let's proceed to the next step in the booking process" and proceed to the next step in the booking process. 
+
+    Only validate one offer at a time. Be precise and polite — the user is about to finalize their choice.
     """
     
     validate_flight_offer_agent = create_react_agent(
         llm,
         tools=[get_latest_offer],
-        prompt=validate_flight_offer_instruction
+        prompt=build_agent_prompt(validate_flight_offer_instruction, 2, "User just reviewed flight options", "Collect passenger details to finalize the booking.")
     )
     
     result = validate_flight_offer_agent.invoke(state)
@@ -114,17 +134,25 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
 
 def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingState:
     collect_passenger_details_instruction = """
-    You goal is to get the user to provide their passenger details for flight booking.
-    1. Ask the user for their name, contact number, email, and age.
-    2. Once you have all the details, present them in a structured format for the user to review
-    3. Only once the user confirms and finalises the details, call the collect_passenger_details tool to collect the passenger details. never call the collect_passenger_details tool without all the details.
-    4. After you are done, create flight booking node will be called to handle payment and create the booking automatically.
+    You are now collecting passenger details for flight booking.
+    Step-by-step:
+    1. Ask the user for the following required information:
+    - Full name
+    - Contact number
+    - Email address
+    - Age
+    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
+    3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
+    4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
+
+    Do not call the tool without complete details. Maintain a clear, respectful tone to ensure trust.
+
     """
     
     collect_passenger_details_agent = create_react_agent(
         llm,
         tools=[collect_passenger_details],
-        prompt=collect_passenger_details_instruction
+        prompt=build_agent_prompt(collect_passenger_details_instruction, 3, "Flight offer was validated successfully.", "Generate a payment link and share it with the user.")
     )
     
     result = collect_passenger_details_agent.invoke(state)
@@ -201,7 +229,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
         }
-    payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}")
+    payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}" + "\n" + "Once the payment is successful, the tickets will be mailed to the provided email. Hope you enjoy your trip!")
     return {
         "from_node": "create_flight_booking_node",
         "messages": [payment_message],
