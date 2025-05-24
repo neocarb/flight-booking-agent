@@ -25,4 +25,7 @@ def collect_passenger_details_router(state: FlightBookingState) -> NodeType:
     return 'human_node'
     
 def human_router(state: FlightBookingState) -> NodeType:
+    last_human_message = state['messages'][-1].content
+    if 'reset' in last_human_message:
+        return '__end__'
     return state['from_node']

@@ -9,6 +9,8 @@ from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBoo
 from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date
 from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
+# should try to reduce the number of nodes, reduces failure rate
+
 llm = ChatOpenAI(model="gpt-4o")
 logger = logging.getLogger(__name__)
 
