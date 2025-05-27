@@ -158,7 +158,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     - Email address
     - Date of Birth (DOB) in YYYY-MM-DD format
     - Gender (m for male, f for female)
-    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
+    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct, specially the email as that is the only way to access the tickets after booking.
     3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
     4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
 
