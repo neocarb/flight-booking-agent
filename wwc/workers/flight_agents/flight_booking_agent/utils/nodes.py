@@ -67,8 +67,14 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     - Travel date (if needed, use the `get_today_date` tool to get the todays date)
     - if the passenger is an adult. Any one above the age of 18 is considered an adult.
     
+    Optionally, you can also ask for:
+    - Max number of connections or stops
+    - Cabin class preference (economy, business, first)
+    - Sort order for flight offers (ascending or descending by price)
+    
+    
     You follow the following steps to search for flight offers:
-    1. Ask the user for the missing conditions to search for flights.
+    1. Ask the user for the conditions to search for flights.
     2. If you have all the conditions to search for flights, ask the user for confirmation before calling the `search_offers` tool. Else go back to step 1.
     3. If the user confirms, call the `search_offers` tool with the most latest set fo conditions. Else go back to step 1.
     
@@ -145,10 +151,13 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     You are now collecting passenger details for flight booking.
     Step-by-step:
     1. Ask the user for the following required information:
-    - Full name
+    - Title (mr, ms, mrs)
+    - First name
+    - Last name
     - Contact number
     - Email address
-    - Age
+    - Date of Birth (DOB) in YYYY-MM-DD format
+    - Gender (m for male, f for female)
     2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
     3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
     4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
@@ -223,13 +232,16 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
         }
-    name = passenger_details.get('name')
+    
+    title = passenger_details.get('title')
+    first_name = passenger_details.get('first_name')
+    last_name = passenger_details.get('last_name')
+    date_of_birth = passenger_details.get('date_of_birth')
     contact = passenger_details.get('contact')
     email = passenger_details.get('email')
-    
-    
-    
-    payment_link = create_flight_booking(description, name, contact, email, offer_id, contact, email, "07/12/1998", "mr", "m", name, name)
+    gender = passenger_details.get('gender')
+
+    payment_link = create_flight_booking(description, offer_id, title, first_name, last_name, contact, email, date_of_birth,gender)
     print("payment_link", payment_link)
     if not payment_link:
         payment_message = AIMessage(content="There is a problem with the payment, please try again.")
