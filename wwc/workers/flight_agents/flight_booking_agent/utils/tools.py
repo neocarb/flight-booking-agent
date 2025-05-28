@@ -12,7 +12,11 @@ def search_offers(
     origin: Annotated[str, "IATA code of flight origin city"],
     destination: Annotated[str, "IATA code flight destination city"],
     departure_date: Annotated[str,"flight departure date from origin, format YYYY-MM-DD"],
-    passenger_age: Annotated[str,"if passenger is above 18 then adult otherwise age"]):
+    passenger_age: Annotated[str,"if passenger is above 18 then adult otherwise age"],
+    maxConnections: Annotated[int, "maximum number of connections allowed for the flight search, default is 0 (direct flight only)"] = None,
+    cabinClass: Annotated[str, "cabin class for the flight search, allowed values are first, business"] = None,
+    sortByPrice: Annotated[str, "sort by price of flight offers, allowed values are ascending or descending"] = None,
+    ):
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
         # Example API endpoint and API key (replace with your real ones)
@@ -29,8 +33,16 @@ def search_offers(
             "departure_date": departure_date,
             "passengers": passengers
         }
+        
+        params = {}
+        if maxConnections:
+            params["maxConnections"] = maxConnections
+        if cabinClass:
+            params["cabinClass"] = cabinClass
+        if sortByPrice:
+            params["sortByPrice"] = sortByPrice
 
-        response = requests.post(api_url, headers=headers, json=payload)
+        response = requests.post(api_url, headers=headers, json=payload, params=params)
         logger.info("response: %s", response.json())
 
         if response.status_code == 200:
@@ -65,21 +77,26 @@ def get_latest_offer(
     
 @tool
 def collect_passenger_details(
-    passenger_name: str,
+    passenger_title: Annotated[str, "passenger title, mr, ms, mrs"],
+    passenger_first_name: str,
+    passenger_last_name: str,
     passenger_contact_number: str,
     passenger_email: str,
-    passenger_age: str,
+    passenger_date_of_birth: str,
+    passenger_gender: Annotated[str, "passenger gender, m for male, f for female"],
     ) -> dict:
     """Collect passenger details for flight booking."""
     return {
         "passenger": {
-            "name": passenger_name,
+            "title": passenger_title,
+            "first_name": passenger_first_name,
+            "last_name": passenger_last_name,
             "contact": passenger_contact_number,
             "email": passenger_email,
-            "age": passenger_age
+            "date_of_birth": passenger_date_of_birth,
+            "gender": passenger_gender
         }
     }
-     
 
 def get_payment_link(
     description: Annotated[float, "description of the payment"],
@@ -120,17 +137,14 @@ def get_payment_link(
 
 def create_flight_booking(
     description: Annotated[float, "description of the payment"],
-    billing_customer_name: Annotated[str, "passenger name for making payment"],  
-    billing_customer_contact: Annotated[str, "passenger contact number for making payment"],
-    billing_customer_email: Annotated[str, "passenger email for making payment"],
     booking_offer_id: Annotated[str, "offer id to create booking for"],
+    booking_passenger_title,
+    booking_passenger_given_name,
+    booking_passenger_family_name,
     booking_passenger_phone_number: Annotated[str, "offer id to create booking for"],
     booking_passenger_email,
     booking_passenger_born_on,
-    booking_passenger_title,
-    booking_passenger_gender,
-    booking_passenger_family_name,
-    booking_passenger_given_name
+    booking_passenger_gender
     ) -> Annotated[str,"url to open the payment page for making the payment"]:
     """Process payment for the flight booking. Returns a URL to open the payment page for the passenger to make the payment."""
     try:
@@ -143,9 +157,6 @@ def create_flight_booking(
         
         payload = {
             "description": description,
-            "billing_customer_name": billing_customer_name,
-            "billing_customer_contact": billing_customer_contact,
-            "billing_customer_email": billing_customer_email,
             "booking_offer_id": booking_offer_id,
             "booking_passenger_phone_number": booking_passenger_phone_number,
             "booking_passenger_email": booking_passenger_email,
