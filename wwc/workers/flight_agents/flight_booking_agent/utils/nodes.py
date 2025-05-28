@@ -94,7 +94,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     result = search_flight_offers_agent.invoke(state)
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
-    tool_message_content = tool_message.content if tool_message and tool_message.content and tool_message.content is not "null" else None
+    tool_message_content = tool_message.content if tool_message and tool_message.content else None
     logger.info("tool_message_content: %s", tool_message_content)
         
     return {
@@ -132,7 +132,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     
     # update state with the selected flight offer ID  
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'get_latest_offer'), None)
-    tool_message_content = tool_message.content if tool_message and tool_message.content and tool_message.content is not "null" else None
+    tool_message_content = tool_message.content if tool_message and tool_message.content else None
     tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
     selected_offer = tool_message_content_dict.get('offer') if tool_message_content_dict else None
     selected_offer_id = selected_offer.get('offerId') if selected_offer else None
@@ -178,7 +178,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     passenger_details = None
     # update state with the selected flight offer ID  
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'collect_passenger_details'), None)
-    tool_message_content = tool_message.content if tool_message and tool_message.content and tool_message.content is not "null" else None
+    tool_message_content = tool_message.content if tool_message and tool_message.content else None
     tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
     passenger_details = tool_message_content_dict.get('passenger') if tool_message_content_dict else None
     print("passenger_details", passenger_details)
