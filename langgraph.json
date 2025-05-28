@@ -3,7 +3,6 @@
     "."
   ],
   "graphs": {
-    "email_agent": "./wwc/workers/email_agent/agent.py:email_agent",
     "flight_booking_agent": "./wwc/workers/flight_agents/flight_booking_agent/agent.py:flight_booking_agent",
     "supervisor_agent": "./wwc/supervisor/agent.py:supervisor_agent",
     "supervisor_agent_v2": "./wwc/supervisor/agent_v2.py:supervisor_agent_v2",
