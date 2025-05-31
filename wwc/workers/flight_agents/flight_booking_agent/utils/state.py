@@ -7,3 +7,4 @@ class FlightBookingState(MessagesState):
     passenger_details: str = ""
     payment_link: str = ""
     from_node: str = ""
+    validation_status: bool = False

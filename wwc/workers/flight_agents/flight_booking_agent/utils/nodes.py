@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
-from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date
+from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date, register_offer_id
 from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 # should try to reduce the number of nodes, reduces failure rate
@@ -25,12 +25,7 @@ Avoid robotic transitions. Refer casually to earlier steps where appropriate.
     return base_instruction.strip() + "\n" + flow_context.strip()
 
 
-def human_node(state: FlightBookingState):
-    # get user input
-    last_ai_message = state['messages'][-1].content
-    logger.info("last_ai_message: %s", last_ai_message)
-    
-    
+def human_node(state: FlightBookingState):    
     request = HumanInterrupt(
         action_request=ActionRequest(
             action="Provide input",  # Action name for clarity in your context
@@ -45,11 +40,9 @@ def human_node(state: FlightBookingState):
         description="last_ai_message"
     )
     response = interrupt([request])[0]
-    logger.info("response: %s", response)
     user_input = response.get("args", "")
     
     # user_input = interrupt(last_ai_message.content)
-    logger.info("user_input: %s", user_input)
     human_message = HumanMessage(content=user_input)
     # create a human message
     human_message = HumanMessage(content=user_input)
@@ -64,7 +57,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     You are a professional flight booking assistant helping users search for one-way flights for a single passenger.
     Your job is to help the user search for flight offers based on the following conditions:
     - Departure and destination airports or cities
-    - Travel date (if needed, use the `get_today_date` tool to get the todays date)
+    - Travel date (use `get_today_date` tool to get the todays date and ensure the date is in the future)
     - if the passenger is an adult. Any one above the age of 18 is considered an adult.
     
     Optionally, you can also ask for:
@@ -81,69 +74,72 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Do not call any tools in parallel.
 
     Once you get the offers:
-    - Present the options clearly, with key details (airline, departure time, price) and the `offer_id` for each.
-    - Use bullet points or a table for easy reading.
+    - Present the options clearly in a table format
+    - Include key details (airline, departure time, price) and the `offer_id` for each.
+    - Ask the user to select an offer by its `offer_id`. Once the user selects an offer, call the `register_offer_id` tool to register the selected offer ID. do not tell the user that you are registering offer.
 
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
     search_flight_offers_agent = create_react_agent(
         llm,
-        tools=[search_offers, get_today_date],
-        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Select flight offer and see if it is still valid")
+        tools=[search_offers, get_today_date, register_offer_id],
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Validate the selected flight offer and proceed to collect passenger details.")
     )
     
-    result = search_flight_offers_agent.invoke(state)
+    result = search_flight_offers_agent.invoke(state) # multiple searches will cause context window issues
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
-    tool_message_content = tool_message.content if tool_message and tool_message.content else None
-    logger.info("tool_message_content: %s", tool_message_content)
-        
+    flight_offers = tool_message.content if tool_message and tool_message.content else None
+    
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer_id'), None)
+    selected_flight_offer_id = tool_message.content if tool_message and tool_message.content else None
+
     return {
         "messages": result['messages'],
         'from_node': 'search_flight_offers_node',
-        "flight_offers": tool_message_content
+        "flight_offers": flight_offers,
+        "selected_flight_offer_id": selected_flight_offer_id,  # This will be updated in the next node
     }
 
 
 # make this node more deterministic and rule based gradually
 def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
-    # This node is responsible for confirming the flight offer selected by the user.
-    # It will extract the flight ID from the user's response and update the state accordingly.
+    latest_offer_json = get_latest_offer(state['selected_flight_offer_id'])
     
-    validate_flight_offer_instruction = """
-    You are validating the user's selected flight offer to ensure it is still available and accurate.
-
-    Follow these steps:
-    1. If the user has not provided an `offer_id`, ask them to choose one of the flight offers.
-    2. If they have provided an `offer_id`, use the `get_latest_offer` tool to fetch the latest details.
-    3. Compare the new offer details with the originally displayed ones:
-    - If there are changes or the offer is no longer valid, inform the user and ask them to pick a different offer. Restart validation.
-    - If the offer is unchanged and valid, say "Let's proceed to the next step in the booking process" and proceed to the next step in the booking process. 
-
-    Only validate one offer at a time. Be precise and polite — the user is about to finalize their choice.
-    """
+    offers_list = json.loads(state["flight_offers"]) if state.get("flight_offers") else []
+    selected_offer_id = state.get("selected_flight_offer_id")
+    logger.info("latest_offer_json: %s", latest_offer_json)
+    logger.info("selected_offer_id: %s", selected_offer_id)
+    # logger.info("offers_list: %s", offers_list)
     
-    validate_flight_offer_agent = create_react_agent(
-        llm,
-        tools=[get_latest_offer],
-        prompt=build_agent_prompt(validate_flight_offer_instruction, 2, "User just reviewed flight options", "Collect passenger details to finalize the booking.")
+    original_offer = next(
+        (offer for offer in offers_list.get("offers") if offer.get("offerId") == selected_offer_id),
+        None
     )
     
-    result = validate_flight_offer_agent.invoke(state)
-    
-    # update state with the selected flight offer ID  
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'get_latest_offer'), None)
-    tool_message_content = tool_message.content if tool_message and tool_message.content else None
-    tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
-    selected_offer = tool_message_content_dict.get('offer') if tool_message_content_dict else None
-    selected_offer_id = selected_offer.get('offerId') if selected_offer else None
-    
-    #TODO: route based on wether flight offer is valid
-    
+    # Compare the offers
+    if not latest_offer_json or not original_offer:
+        # Could not find or fetch the offer, ask user to pick again
+        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please pick a valid offer ID from the list.")
+        return {
+            "messages": state["messages"] + [ai_message],
+            "from_node": "validate_flight_offer_node",
+        }
+
+    # Example: Compare price and availability (customize as needed)
+    if latest_offer_json.get("price") != original_offer.get("price"):
+        ai_message = AIMessage(content="The selected offer is no longer valid or its price has changed. Please try again later")
+        return {
+            "messages": state["messages"] + [ai_message],
+            "from_node": "validate_flight_offer_node"
+        }
+
+    ai_message = AIMessage(content="The selected flight offer is valid.")
     return {
-        "messages": result['messages'],
+        "messages": state["messages"] + [ai_message],
         "from_node": "validate_flight_offer_node",
-        "selected_flight_offer_id": selected_offer_id,  # corrected variable name
-        "selected_flight_offer": json.dumps(selected_offer) if selected_offer else None,  # corrected variable name
+        "selected_flight_offer_id": selected_offer_id,
+        "selected_flight_offer": json.dumps(latest_offer_json) if latest_offer_json else None,  # corrected variable name
+        "validation_status": True,  # Indicating the offer is valid
     }
 
 def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingState:
@@ -173,7 +169,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     )
     
     result = collect_passenger_details_agent.invoke(state)
-    print("collect_passenger_details_node result", result)
+    # print("collect_passenger_details_node result", result)
     
     passenger_details = None
     # update state with the selected flight offer ID  

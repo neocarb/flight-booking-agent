@@ -4,6 +4,7 @@ from typing import Annotated
 from langchain_core.tools import tool
 from datetime import datetime
 from langchain.tools import Tool
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,9 @@ def search_offers(
             params["cabinClass"] = cabinClass
         if sortByPrice:
             params["sortByPrice"] = sortByPrice
+        
+        logger.info("search_offers payload: %s", payload)
+        logger.info("search_offers params: %s", params)
 
         response = requests.post(api_url, headers=headers, json=payload, params=params)
         logger.info("response: %s", response.json())
@@ -53,7 +57,7 @@ def search_offers(
     except Exception as e:
         return None
 
-@tool
+
 def get_latest_offer(
     offer_id: Annotated[str, "offer ID"]) -> Annotated[dict, "flight offer details"]:
     """Fetch flight offer details based on the offer ID to see if  the offer is still valid. Returns a json string with details of the flight offer."""
@@ -152,7 +156,12 @@ def create_flight_booking(
         api_url = "https://flightbookingserver-458112.ue.r.appspot.com/api/booking/create"
 
         headers = {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "PostmanRuntime/7.32.3",
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Origin": "https://web.postman.co",
         }
         
         payload = {
@@ -166,9 +175,11 @@ def create_flight_booking(
             "booking_passenger_family_name": booking_passenger_family_name,
             "booking_passenger_given_name": booking_passenger_given_name   
         }
-        logger.info("payload: %s", payload)
-        response = requests.post(api_url, headers=headers, json=payload)
-        logger.info("response: %s", response.json())
+        logger.info("create_flight_booking payload: %s", payload)
+        response = requests.post(api_url, headers=headers, json=payload, verify=True)
+        logger.info("status: %s", response.status_code)
+        logger.info("headers: %s", response.headers)
+        logger.info("text: %s", response.text)
 
         if response.status_code == 200:
             data = response.json()
@@ -184,3 +195,10 @@ def create_flight_booking(
 def get_today_date() -> Annotated[str, "todays date in iso format"]:
     """returns todays date"""
     return datetime.now().isoformat()
+
+@tool
+def register_offer_id(offer_id: Annotated[str, "the offer id to register"]):
+    """Registers the selected flight offer ID."""
+    logger.info("Registering offer ID: %s", offer_id)
+    # Store the offer ID in a persistent way (e.g., database, file, etc.)
+    return offer_id
