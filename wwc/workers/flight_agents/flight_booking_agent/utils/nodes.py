@@ -115,6 +115,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
         None
     )
     
+    ai_message = None
     # Compare the offers
     if not latest_offer_json or not original_offer:
         # Could not find or fetch the offer, ask user to pick again
@@ -131,9 +132,14 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node"
         }
+        
+    if ai_message:
+        messages = state["messages"] + [ai_message]
+    else:
+        messages = state["messages"]
 
     return {
-        "messages": state["messages"] + [ai_message] if ai_message else state["messages"],
+        "messages": messages,
         "from_node": "validate_flight_offer_node",
         "selected_flight_offer_id": selected_offer_id,
         "selected_flight_offer": json.dumps(latest_offer_json) if latest_offer_json else None,  # corrected variable name
