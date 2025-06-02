@@ -185,8 +185,6 @@ def create_flight_booking(
     except Exception as e:
        return None
    
-   
-@tool
 def get_today_date() -> Annotated[str, "todays date in iso format"]:
     """returns todays date"""
     return datetime.now().isoformat()

@@ -53,11 +53,11 @@ def human_node(state: FlightBookingState):
 # stop child from making a booking; Handle child
 # query -> confirm -> tool_call
 def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
-    search_flight_offers_instruction = """
+    search_flight_offers_instruction = f"""
     You are a professional flight booking assistant helping users search for one-way flights for a single passenger.
     Your job is to help the user search for flight offers based on the following conditions:
     - Departure and destination airports or cities
-    - Travel date (use `get_today_date` tool to get the todays date and ensure the date is in the future)
+    - Travel date (Today's date is {get_today_date()}, ensure the travel date is always in the future)
     - if the passenger is an adult. Any one above the age of 18 is considered an adult.
     
     Optionally, you can also ask for:
@@ -82,7 +82,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     """
     search_flight_offers_agent = create_react_agent(
         llm,
-        tools=[search_offers, get_today_date, register_offer_id],
+        tools=[search_offers, register_offer_id],
         prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Validate the selected flight offer and proceed to collect passenger details.")
     )
     
