@@ -47,7 +47,6 @@ def search_offers(
         logger.info("search_offers params: %s", params)
 
         response = requests.post(api_url, headers=headers, json=payload, params=params)
-        logger.info("response: %s", response.json())
 
         if response.status_code == 200:
             flights_data = response.json()
@@ -170,11 +169,9 @@ def create_flight_booking(
             "booking_passenger_family_name": booking_passenger_family_name,
             "booking_passenger_given_name": booking_passenger_given_name   
         }
+        
         logger.info("create_flight_booking payload: %s", payload)
         response = requests.post(api_url, headers=headers, json=payload, verify=True)
-        logger.info("status: %s", response.status_code)
-        logger.info("headers: %s", response.headers)
-        logger.info("text: %s", response.text)
 
         if response.status_code == 200:
             data = response.json()
