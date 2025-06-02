@@ -81,24 +81,24 @@ def get_latest_offer(
     
 @tool
 def collect_passenger_details(
-    passenger_title: Annotated[str, "passenger title, mr, ms, mrs"],
+    passenger_title: Annotated[str, "passenger title, 'mr', 'ms', 'mrs'"],
     passenger_first_name: str,
     passenger_last_name: str,
     passenger_contact_number: str,
     passenger_email: str,
     passenger_date_of_birth: str,
-    passenger_gender: Annotated[str, "passenger gender, m for male, f for female"],
+    passenger_gender: Annotated[str, "passenger gender, 'm' for male, 'f' for female"],
     ) -> dict:
     """Collect passenger details for flight booking."""
     return {
         "passenger": {
-            "title": passenger_title,
+            "title": passenger_title.lower(),
             "first_name": passenger_first_name,
             "last_name": passenger_last_name,
             "contact": passenger_contact_number,
             "email": passenger_email,
             "date_of_birth": passenger_date_of_birth,
-            "gender": passenger_gender
+            "gender": passenger_gender.lower()  
         }
     }
 
@@ -157,11 +157,6 @@ def create_flight_booking(
 
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "PostmanRuntime/7.32.3",
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive",
-            "Origin": "https://web.postman.co",
         }
         
         payload = {
