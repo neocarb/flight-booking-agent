@@ -8,16 +8,16 @@ logger = logging.getLogger(__name__)
 NodeType = Literal['search_flight_offers_node', 'human_node', 'validate_flight_offer_node', 'payment_node', '__end__']
 
 def search_flight_offers_router(state: FlightBookingState) -> NodeType:
-    logger.info("Entering search_flight_offers_router, state = %s", state)
-    if 'flight_offers' in state and state['flight_offers']:
+    logger.info("Entering search_flight_offers_router, state: %s", state)   
+    if 'flight_offers' in state and state['flight_offers'] and 'selected_flight_offer_id' in state and state['selected_flight_offer_id']:
         return 'validate_flight_offer_node'
     return 'human_node'
     
 def validate_flight_offer_router(state: FlightBookingState) -> NodeType:
-    logger.info("Entering validate_flight_offer_router, state = %s", state)
-    if  'selected_flight_offer_id' in state and state['selected_flight_offer_id'] and 'selected_flight_offer' in state and state['selected_flight_offer']:
+    logger.info("Entering validate_flight_offer_router")
+    if 'validation_status' in state and state['validation_status']:
         return 'collect_passenger_details_node'
-    return 'human_node'
+    return '__end__'
     
 def collect_passenger_details_router(state: FlightBookingState) -> NodeType:
     if 'passenger_details' in state and state['passenger_details']:
