@@ -13,7 +13,6 @@ def search_offers(
     origin: Annotated[str, "IATA code of flight origin city"],
     destination: Annotated[str, "IATA code flight destination city"],
     departure_date: Annotated[str,"flight departure date from origin, format YYYY-MM-DD"],
-    passenger_age: Annotated[str,"if passenger is above 18 then adult otherwise age"],
     maxConnections: Annotated[int, "maximum number of connections allowed for the flight search, default is 0 (direct flight only)"] = None,
     cabinClass: Annotated[str, "cabin class for the flight search, allowed values are first, business"] = None,
     sortByPrice: Annotated[str, "sort by price of flight offers, allowed values are ascending or descending"] = None,
@@ -27,7 +26,7 @@ def search_offers(
             "Content-Type": "application/json"
         }
         
-        passengers = [{"type": passenger_age}]
+        passengers = [{"type": "adult"}]
         payload = {
             "origin": origin,
             "destination": destination,

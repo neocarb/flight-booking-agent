@@ -58,7 +58,6 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Your job is to help the user search for flight offers based on the following conditions:
     - Departure and destination airports or cities
     - Travel date (Today's date is {get_today_date()}, ensure the travel date is always in the future)
-    - if the passenger is an adult. Any one above the age of 18 is considered an adult.
     
     Optionally, you can also ask for:
     - Max number of connections or stops
