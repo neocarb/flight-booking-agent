@@ -82,7 +82,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_agent = create_react_agent(
         llm,
         tools=[search_offers, register_offer_id],
-        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Validate the selected flight offer")
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect passengers  details to proceed with booking.")
     )
     
     result = search_flight_offers_agent.invoke(state) # multiple searches will cause context window issues
@@ -118,7 +118,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     # Compare the offers
     if not latest_offer_json or not original_offer:
         # Could not find or fetch the offer, ask user to pick again
-        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please pick a valid offer ID from the list.")
+        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please reset and try again")
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
@@ -126,15 +126,14 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
 
     # Example: Compare price and availability (customize as needed)
     if latest_offer_json.get("price") != original_offer.get("price"):
-        ai_message = AIMessage(content="The selected offer is no longer valid or its price has changed. Please try again later")
+        ai_message = AIMessage(content="The selected offer has expired, please reset and try again")
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node"
         }
 
-    ai_message = AIMessage(content="The selected flight offer is valid.")
     return {
-        "messages": state["messages"] + [ai_message],
+        "messages": state["messages"] + [ai_message] if ai_message else state["messages"],
         "from_node": "validate_flight_offer_node",
         "selected_flight_offer_id": selected_offer_id,
         "selected_flight_offer": json.dumps(latest_offer_json) if latest_offer_json else None,  # corrected variable name
