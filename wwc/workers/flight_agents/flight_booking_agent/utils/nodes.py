@@ -175,6 +175,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     # update state with the selected flight offer ID  
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'collect_passenger_details'), None)
     tool_message_content = tool_message.content if tool_message and tool_message.content else None
+    logger.info("tool_message_content: %s", tool_message_content)
     tool_message_content_dict = json.loads(tool_message_content) if tool_message_content else None
     passenger_details = tool_message_content_dict.get('passenger') if tool_message_content_dict else None
     print("passenger_details", passenger_details)
