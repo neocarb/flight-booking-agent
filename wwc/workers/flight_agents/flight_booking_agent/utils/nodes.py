@@ -119,7 +119,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     # Compare the offers
     if not latest_offer_json or not original_offer:
         # Could not find or fetch the offer, ask user to pick again
-        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please start over")
+        ai_message = AIMessage(content="Sorry, the selected offer is not available. Please start over and select a different offer.")
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
@@ -127,7 +127,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
 
     # Example: Compare price and availability (customize as needed)
     if latest_offer_json.get("price") != original_offer.get("price"):
-        ai_message = AIMessage(content="The selected offer has expired. Please start over")
+        ai_message = AIMessage(content="The selected offer has expired. Please start over and select a different offer.")
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node"
