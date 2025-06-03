@@ -154,16 +154,15 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     - Title (mr, ms, mrs)
     - First name
     - Last name
-    - Contact number
-    - Email address
+    - Contact number (country code + number, e.g., +1 1234567890)
+    - Email address (should be valid and will be used for sending the airline tickets)
     - Date of Birth (DOB) in YYYY-MM-DD format
     - Gender (m for male, f for female)
-    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct, specially the email as that is the only way to access the tickets after booking.
+    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
     3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
     4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
 
     Do not call the tool without complete details. Maintain a clear, respectful tone to ensure trust.
-
     """
     
     collect_passenger_details_agent = create_react_agent(
