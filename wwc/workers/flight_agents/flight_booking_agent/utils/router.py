@@ -17,7 +17,7 @@ def validate_flight_offer_router(state: FlightBookingState) -> NodeType:
     logger.info("Entering validate_flight_offer_router")
     if 'validation_status' in state and state['validation_status']:
         return 'collect_passenger_details_node'
-    return 'search_flight_offers_node'
+    return '__end__'
 
 def collect_passenger_details_router(state: FlightBookingState) -> NodeType:
     if 'passenger_details' in state and state['passenger_details']:

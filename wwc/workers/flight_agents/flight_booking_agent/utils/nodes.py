@@ -119,7 +119,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     # Compare the offers
     if not latest_offer_json or not original_offer:
         # Could not find or fetch the offer, ask user to pick again
-        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please try again with a different offer.")
+        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please start over")
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
@@ -127,7 +127,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
 
     # Example: Compare price and availability (customize as needed)
     if latest_offer_json.get("price") != original_offer.get("price"):
-        ai_message = AIMessage(content="The selected offer has expired. Please try again with a different offer.")
+        ai_message = AIMessage(content="The selected offer has expired. Please start over")
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node"
@@ -194,7 +194,7 @@ def payment_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     if not passenger_details:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        payment_message = AIMessage(content="There is a problem with the payment, Please enter 'reset' to start over")
         return {
             "messages": [payment_message],
             "from_node": "payment_node",
@@ -210,7 +210,7 @@ def payment_node(state: FlightBookingState) -> FlightBookingState:
     )
     print("payment_link", payment_link)
     if not payment_link:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        payment_message = AIMessage(content="There is a problem with the payment, Please enter 'reset' to start over")
         return {
             "messages": [payment_message],
             "from_node": "payment_node",
@@ -228,7 +228,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     logger.info("passenger_details %s", passenger_details)
     if not passenger_details:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        payment_message = AIMessage(content="There is a problem with the payment, Please enter 'reset' to start over.")
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
@@ -245,7 +245,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     payment_link = create_flight_booking(description, offer_id, title, first_name, last_name, contact, email, date_of_birth,gender)
     print("payment_link", payment_link)
     if not payment_link:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        payment_message = AIMessage(content="There is a problem with the payment, Please enter 'reset' to start over")
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
