@@ -171,6 +171,7 @@ def create_flight_booking(
         
         logger.info("create_flight_booking payload: %s", payload)
         response = requests.post(api_url, headers=headers, json=payload, verify=True)
+        logger.info("create_flight_booking response: %s", response)
 
         if response.status_code == 200:
             data = response.json()
