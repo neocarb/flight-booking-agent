@@ -23,9 +23,6 @@ flight_booking_builder.add_node("collect_passenger_details_node", collect_passen
 flight_booking_builder.add_node("create_flight_booking_node", create_flight_booking_node)
 flight_booking_builder.add_node("human_node", human_node)
 
-# flight_booking_builder.add_node("payment_node", make_payment_node)
-# flight_booking_builder.add_node("create_flight_booking_node", create_flight_booking_node)
-
 flight_booking_builder.add_edge(START, "search_flight_offers_node")
 flight_booking_builder.add_conditional_edges(
             "search_flight_offers_node",
@@ -40,7 +37,7 @@ flight_booking_builder.add_conditional_edges(
             validate_flight_offer_router,
             {
                 "collect_passenger_details_node": "collect_passenger_details_node",
-                "human_node": "human_node"
+                END: END
             }
         )
 
