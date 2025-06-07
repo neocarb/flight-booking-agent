@@ -24,6 +24,7 @@ Avoid robotic transitions. Refer casually to earlier steps where appropriate.
 """
     return base_instruction.strip() + "\n" + flow_context.strip()
 
+reset_message = "Please click the reset button to start over"
 
 def human_node(state: FlightBookingState):    
     request = HumanInterrupt(
@@ -119,7 +120,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
 
     if not selected_offer:
-        ai_message = AIMessage(content="No flight offer selected. Please start over and select a flight offer.")
+        ai_message = AIMessage(content="No flight offer selected. " + reset_message)
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
@@ -137,7 +138,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     logger.info("selected_offer: %s", selected_offer)
 
     if not latest_offer_json:
-        ai_message = AIMessage(content="Sorry, the selected offer is not available. Please start over and select a different offer.")
+        ai_message = AIMessage(content="Sorry, the selected offer is not available. " + reset_message)
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
@@ -149,7 +150,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     latest_offer_price = latest_offer_json.get("offer", {}).get("totalCost")
     
     if latest_offer_price != selected_offer_price:
-        ai_message = AIMessage(content="Hmm.. seems like the flight details has changed. Please click 'reset' and start over to get the latest details.")
+        ai_message = AIMessage(content="Hmm.. seems like the flight details has changed. " + reset_message)
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
@@ -216,7 +217,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     logger.info("passenger_details %s", passenger_details)
     if not passenger_details:
-        payment_message = AIMessage(content="There is a problem with the payment, Please enter 'reset' to start over.")
+        payment_message = AIMessage(content="There is a problem with the payment. " + reset_message)
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
@@ -233,7 +234,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     payment_link = create_flight_booking(description, offer_id, title, first_name, last_name, contact, email, date_of_birth,gender)
     print("payment_link", payment_link)
     if not payment_link:
-        payment_message = AIMessage(content="There is a problem with the payment, Please enter 'reset' to start over")
+        payment_message = AIMessage(content="There is a problem with the payment. " + reset_message)
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
