@@ -6,7 +6,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, trim_messages
 
 from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
-from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date, register_offer_id, register_offer
+from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date, register_offer
 from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 # should try to reduce the number of nodes, reduces failure rate
