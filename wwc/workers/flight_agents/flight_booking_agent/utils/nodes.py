@@ -82,7 +82,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_agent = create_react_agent(
         llm,
         tools=[search_offers, register_offer],
-        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Start the flight booking process")
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect passenger details from user for booking")
     )
     
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
