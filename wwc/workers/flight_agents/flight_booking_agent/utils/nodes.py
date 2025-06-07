@@ -3,10 +3,10 @@ import logging
 from langchain_openai import ChatOpenAI
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, trim_messages
 
 from wwc.workers.flight_agents.flight_booking_agent.utils.state import FlightBookingState
-from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date, register_offer_id
+from wwc.workers.flight_agents.flight_booking_agent.utils.tools import search_offers, get_latest_offer, collect_passenger_details, get_payment_link, create_flight_booking, get_today_date, register_offer_id, register_offer
 from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInterruptConfig
 
 # should try to reduce the number of nodes, reduces failure rate
@@ -24,6 +24,7 @@ Avoid robotic transitions. Refer casually to earlier steps where appropriate.
 """
     return base_instruction.strip() + "\n" + flow_context.strip()
 
+reset_message = "Please click the reset button to start over"
 
 def human_node(state: FlightBookingState):    
     request = HumanInterrupt(
@@ -75,75 +76,96 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Once you get the offers:
     - Present the options clearly in a table format
     - Include key details (airline, departure time, price) and the `offer_id` for each.
-    - Ask the user to select an offer by its `offer_id`. Once the user selects an offer, call the `register_offer_id` tool to register the selected offer ID. do not tell the user that you are registering offer.
+    - Ask the user to select an offer by its `offer_id`. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. do not tell the user that you are registering offer.
 
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
     search_flight_offers_agent = create_react_agent(
         llm,
-        tools=[search_offers, register_offer_id],
-        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect passengers  details to proceed with booking.")
+        tools=[search_offers, register_offer],
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect passenger details from user for booking")
     )
     
-    result = search_flight_offers_agent.invoke(state) # multiple searches will cause context window issues
+    result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
+    
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
     flight_offers = tool_message.content if tool_message and tool_message.content else None
     
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer_id'), None)
-    selected_flight_offer_id = tool_message.content if tool_message and tool_message.content else None
+    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
+    selected_flight_offer = tool_message.content if tool_message and tool_message.content else None
+
+    msgs = trim_messages(
+        result['messages'],
+        max_tokens=1000,
+        strategy="last",
+        token_counter=ChatOpenAI(model="gpt-4o"),
+        include_system=False,
+        allow_partial=False,
+    )
 
     return {
-        "messages": result['messages'],
+        "messages": msgs,
         'from_node': 'search_flight_offers_node',
         "flight_offers": flight_offers,
-        "selected_flight_offer_id": selected_flight_offer_id,  # This will be updated in the next node
+        "selected_flight_offer": selected_flight_offer
     }
 
 
 # make this node more deterministic and rule based gradually
 def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
-    latest_offer_json = get_latest_offer(state['selected_flight_offer_id'])
-    
-    offers_list = json.loads(state["flight_offers"]) if state.get("flight_offers") else []
-    selected_offer_id = state.get("selected_flight_offer_id")
-    logger.info("latest_offer_json: %s", latest_offer_json)
-    logger.info("selected_offer_id: %s", selected_offer_id)
-    # logger.info("offers_list: %s", offers_list)
-    
-    original_offer = next(
-        (offer for offer in offers_list.get("offers") if offer.get("offerId") == selected_offer_id),
-        None
-    )
-    
-    ai_message = None
-    # Compare the offers
-    if not latest_offer_json or not original_offer:
-        # Could not find or fetch the offer, ask user to pick again
-        ai_message = AIMessage(content="Sorry, I couldn't validate your selected offer. Please try again with a different offer.")
+    """
+    Validates the selected flight offer against the latest offer data.
+    Returns updated state with validation status and messages.
+    """
+    selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
+
+    if not selected_offer:
+        ai_message = AIMessage(content="No flight offer selected. " + reset_message)
         return {
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
+            "validation_status": False,
+            "selected_flight_offer_id": None,
+            "selected_flight_offer": None,
         }
 
-    # Example: Compare price and availability (customize as needed)
-    if latest_offer_json.get("price") != original_offer.get("price"):
-        ai_message = AIMessage(content="The selected offer has expired. Please try again with a different offer.")
+    selected_offer_id = selected_offer.get("offer_id")
+    selected_offer_price = selected_offer.get("totalCost")
+
+    latest_offer_json = get_latest_offer(selected_offer_id)
+
+    logger.info("latest_offer_json: %s", latest_offer_json)
+    logger.info("selected_offer: %s", selected_offer)
+
+    if not latest_offer_json:
+        ai_message = AIMessage(content="Sorry, the selected offer is not available. " + reset_message)
         return {
             "messages": state["messages"] + [ai_message],
-            "from_node": "validate_flight_offer_node"
+            "from_node": "validate_flight_offer_node",
+            "validation_status": False,
+            "selected_flight_offer_id": None,
+            "selected_flight_offer": None,
         }
-        
-    if ai_message:
-        messages = state["messages"] + [ai_message]
-    else:
-        messages = state["messages"]
+    
+    latest_offer_price = latest_offer_json.get("offer", {}).get("totalCost")
+    
+    if latest_offer_price != selected_offer_price:
+        ai_message = AIMessage(content="Hmm.. seems like the flight details has changed. " + reset_message)
+        return {
+            "messages": state["messages"] + [ai_message],
+            "from_node": "validate_flight_offer_node",
+            "validation_status": False,
+            "selected_flight_offer_id": None,
+            "selected_flight_offer": None,
+        }
 
+    # Offer is valid
     return {
-        "messages": messages,
+        "messages": state["messages"],
         "from_node": "validate_flight_offer_node",
         "selected_flight_offer_id": selected_offer_id,
-        "selected_flight_offer": json.dumps(latest_offer_json) if latest_offer_json else None,  # corrected variable name
-        "validation_status": True,  # Indicating the offer is valid
+        "selected_flight_offer": json.dumps(latest_offer_json),
+        "validation_status": True,
     }
 
 def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingState:
@@ -154,16 +176,15 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     - Title (mr, ms, mrs)
     - First name
     - Last name
-    - Contact number
-    - Email address
+    - Contact number (country code + number, e.g., +1 1234567890)
+    - Email address (should be valid and will be used for sending the airline tickets)
     - Date of Birth (DOB) in YYYY-MM-DD format
     - Gender (m for male, f for female)
-    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct, specially the email as that is the only way to access the tickets after booking.
+    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
     3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
     4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
 
     Do not call the tool without complete details. Maintain a clear, respectful tone to ensure trust.
-
     """
     
     collect_passenger_details_agent = create_react_agent(
@@ -189,38 +210,6 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
         "from_node": "collect_passenger_details_node",
         "passenger_details": json.dumps(passenger_details) if passenger_details else None,  # corrected variable name
     }
-
-def payment_node(state: FlightBookingState) -> FlightBookingState:
-    description = "Flight booking payment"
-    passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
-    if not passenger_details:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
-        return {
-            "messages": [payment_message],
-            "from_node": "payment_node",
-        }
-    name = passenger_details.get('name')
-    contact = passenger_details.get('contact')
-    email = passenger_details.get('email')
-    payment_link = get_payment_link(
-        description=description,
-        name=name,
-        contact=contact,
-        email=email
-    )
-    print("payment_link", payment_link)
-    if not payment_link:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
-        return {
-            "messages": [payment_message],
-            "from_node": "payment_node",
-        }
-    payment_message = AIMessage(content=f"Please make the payment using the following link: {payment_link}")
-    return {
-        "from_node": "payment_node",
-        "messages": [payment_message],
-        "payment_link": payment_link,
-    }
     
 def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
@@ -228,7 +217,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     logger.info("passenger_details %s", passenger_details)
     if not passenger_details:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        payment_message = AIMessage(content="There is a problem with the payment. " + reset_message)
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
@@ -245,7 +234,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     payment_link = create_flight_booking(description, offer_id, title, first_name, last_name, contact, email, date_of_birth,gender)
     print("payment_link", payment_link)
     if not payment_link:
-        payment_message = AIMessage(content="There is a problem with the payment, please try again.")
+        payment_message = AIMessage(content="There is a problem with the payment. " + reset_message)
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
