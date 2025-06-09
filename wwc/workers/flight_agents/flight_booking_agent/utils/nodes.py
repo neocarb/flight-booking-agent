@@ -118,7 +118,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     Validates the selected flight offer against the latest offer data.
     Returns updated state with validation status and messages.
     """
-    selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
+    selected_offer = json.loads(state["selected_flight_offer"]) if state["selected_flight_offer"] else None
     logger.info("selected_flight_offer: %s", selected_offer)
 
     if not selected_offer:
@@ -211,7 +211,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     
 def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
-    selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
+    selected_offer = json.loads(state["selected_flight_offer"]) if state["selected_flight_offer"] else None
     logger.info("selected_offer: %s", selected_offer)
     
     selected_offer_id = selected_offer.get("offer_id") if selected_offer else None
