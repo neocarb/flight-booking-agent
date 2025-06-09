@@ -130,7 +130,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
             "selected_flight_offer": None,
         }
 
-    selected_offer_id = selected_offer.get("offer_id")
+    selected_offer_id = selected_offer.get("offerId")
     selected_offer_price = selected_offer.get("totalCost")
 
     latest_offer_json = get_latest_offer(selected_offer_id)
@@ -214,7 +214,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     selected_offer = json.loads(state["selected_flight_offer"]) if state["selected_flight_offer"] else None
     logger.info("selected_offer: %s", selected_offer)
     
-    selected_offer_id = selected_offer.get("offer_id") if selected_offer else None
+    selected_offer_id = selected_offer.get("offerId") if selected_offer else None
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     logger.info("passenger_details %s", passenger_details)
     if not passenger_details:
