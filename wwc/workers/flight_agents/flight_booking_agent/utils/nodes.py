@@ -211,6 +211,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     
 def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
+    logger.info("state: %s", state)
     selected_offer = json.loads(state["selected_flight_offer"]) if state["selected_flight_offer"] else None
     logger.info("selected_offer: %s", selected_offer)
     
