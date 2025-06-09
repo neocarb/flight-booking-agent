@@ -93,6 +93,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
     selected_flight_offer = tool_message.content if tool_message and tool_message.content else None
+    logger.info("selected_flight_offer: %s", selected_flight_offer)
 
     msgs = trim_messages(
         result['messages'],
@@ -118,6 +119,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     Returns updated state with validation status and messages.
     """
     selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
+    logger.info("selected_flight_offer: %s", selected_offer)
 
     if not selected_offer:
         ai_message = AIMessage(content="No flight offer selected. " + reset_message)
@@ -210,6 +212,8 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
 def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
     selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
+    logger.info("selected_offer: %s", selected_offer)
+    
     selected_offer_id = selected_offer.get("offer_id") if selected_offer else None
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     logger.info("passenger_details %s", passenger_details)
