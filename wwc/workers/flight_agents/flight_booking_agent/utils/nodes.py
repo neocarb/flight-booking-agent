@@ -162,7 +162,7 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     return {
         "messages": state["messages"],
         "from_node": "validate_flight_offer_node",
-        "selected_flight_offer": json.dumps(latest_offer_json),
+        "selected_flight_offer": json.dumps(latest_offer_json.get("offer"),
         "validation_status": True,
     }
 
