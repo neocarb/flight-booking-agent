@@ -125,7 +125,6 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
             "validation_status": False,
-            "selected_flight_offer_id": None,
             "selected_flight_offer": None,
         }
 
@@ -143,7 +142,6 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
             "validation_status": False,
-            "selected_flight_offer_id": None,
             "selected_flight_offer": None,
         }
     
@@ -155,7 +153,6 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
             "messages": state["messages"] + [ai_message],
             "from_node": "validate_flight_offer_node",
             "validation_status": False,
-            "selected_flight_offer_id": None,
             "selected_flight_offer": None,
         }
 
@@ -163,7 +160,6 @@ def validate_flight_offer_node(state: FlightBookingState) -> FlightBookingState:
     return {
         "messages": state["messages"],
         "from_node": "validate_flight_offer_node",
-        "selected_flight_offer_id": selected_offer_id,
         "selected_flight_offer": json.dumps(latest_offer_json),
         "validation_status": True,
     }
@@ -213,11 +209,19 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     
 def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     description = "Flight booking payment"
-    offer_id = state['selected_flight_offer_id']
+    selected_offer = json.loads(state.get("selected_flight_offer")) if state.get("selected_flight_offer") else None
+    selected_offer_id = selected_offer.get("offer_id") if selected_offer else None
     passenger_details = json.loads(state['passenger_details']) if state['passenger_details'] else None
     logger.info("passenger_details %s", passenger_details)
     if not passenger_details:
         payment_message = AIMessage(content="There is a problem with the payment. " + reset_message)
+        return {
+            "messages": [payment_message],
+            "from_node": "create_flight_booking_node",
+        }
+
+    if not selected_offer_id:
+        payment_message = AIMessage(content="Seems like you have not selected a valid offer. " + reset_message)
         return {
             "messages": [payment_message],
             "from_node": "create_flight_booking_node",
@@ -231,7 +235,7 @@ def create_flight_booking_node(state: FlightBookingState) -> FlightBookingState:
     email = passenger_details.get('email')
     gender = passenger_details.get('gender')
 
-    payment_link = create_flight_booking(description, offer_id, title, first_name, last_name, contact, email, date_of_birth,gender)
+    payment_link = create_flight_booking(description, selected_offer_id, title, first_name, last_name, contact, email, date_of_birth,gender)
     print("payment_link", payment_link)
     if not payment_link:
         payment_message = AIMessage(content="There is a problem with the payment. " + reset_message)
