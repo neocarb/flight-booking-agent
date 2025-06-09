@@ -191,4 +191,4 @@ def register_offer(offer_id: Annotated[str, "the offer id to register"], totalCo
     """Registers the selected flight offer ID."""
     logger.info("Registering offer ID: %s with totalCost: %s", offer_id, totalCost)
     # Store the offer ID and totalCost in a persistent way (e.g., database, file, etc.)
-    return {"offer_id": offer_id, "totalCost": totalCost}
+    return {"offerId": offer_id, "totalCost": totalCost}
