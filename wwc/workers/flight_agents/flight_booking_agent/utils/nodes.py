@@ -75,8 +75,8 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
 
     Once you get the offers:
     - Present the options clearly in a table format
-    - Include key details (airline, departure time, price) and the `offer_id` for each.
-    - Ask the user to select an offer by its `offer_id`. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. do not tell the user that you are registering offer.
+    - Include key details (airline, departure time, price) and the `offerId` for each.
+    - Ask the user to select an offer by its `offerId`. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. do not tell the user that you are registering offer.
 
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
