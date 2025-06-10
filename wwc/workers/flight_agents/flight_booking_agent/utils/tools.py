@@ -187,8 +187,8 @@ def get_today_date() -> Annotated[str, "todays date in iso format"]:
     return datetime.now().isoformat()
 
 @tool
-def register_offer(offerId: Annotated[str, "the offerId to register"], totalCost: Annotated[str, "the totalCost of the flight offer"]):
+def register_offer(offerId: Annotated[str, "the offerId to register"], totalCost: Annotated[str, "the totalCost of the flight offer, without currency"], currency: Annotated[str, "the currency of the totalCost, e.g. INR, USD"])-> dict:
     """Registers the selected flight offer ID."""
     logger.info("Registering offer ID: %s with totalCost: %s", offerId, totalCost)
     # Store the offer ID and totalCost in a persistent way (e.g., database, file, etc.)
-    return {"offerId": offerId, "totalCost": totalCost}
+    return {"offerId": offerId, "totalCost": totalCost, "currency": currency}
