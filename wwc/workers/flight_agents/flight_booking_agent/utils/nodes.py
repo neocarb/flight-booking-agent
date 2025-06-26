@@ -95,14 +95,16 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     selected_flight_offer = tool_message.content if tool_message and tool_message.content else None
     logger.info("selected_flight_offer: %s", selected_flight_offer)
 
-    msgs = trim_messages(
-        result['messages'],
-        max_tokens=1000,
-        strategy="last",
-        token_counter=ChatOpenAI(model="gpt-4o"),
-        include_system=False,
-        allow_partial=False,
-    )
+    # msgs = trim_messages(
+    #     result['messages'],
+    #     max_tokens=10000,
+    #     strategy="last",
+    #     token_counter=ChatOpenAI(model="gpt-4o"),
+    #     include_system=False,
+    #     allow_partial=False,
+    # )
+    
+    msgs = result['messages']  # keep all messages for now, can be trimmed later
 
     return {
         "messages": msgs,

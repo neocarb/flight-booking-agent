@@ -35,6 +35,7 @@ def search_offers(
         }
         
         params = {}
+        params["maxConnections"] = 0  # Default to direct flights only
         if maxConnections:
             params["maxConnections"] = maxConnections
         if cabinClass:
@@ -49,7 +50,8 @@ def search_offers(
 
         if response.status_code == 200:
             flights_data = response.json()
-            return flights_data.get('data')
+            data = flights_data.get('data')
+            return data
         else:
            return None
     except Exception as e:
