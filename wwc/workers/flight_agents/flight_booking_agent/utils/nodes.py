@@ -65,6 +65,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     - Cabin class preference (economy, business, first)
     - Sort order for flight offers (ascending or descending by price)
     
+    If you are comparing offers across multiple dates, use summarize=True to get only the top 5 offers for each date.
     
     You follow the following steps to search for flight offers:
     1. Ask the user for the conditions to search for flights.

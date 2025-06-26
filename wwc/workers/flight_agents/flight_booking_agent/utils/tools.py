@@ -16,6 +16,7 @@ def search_offers(
     maxConnections: Annotated[int, "maximum number of connections allowed for the flight search, default is 0 (direct flight only)"] = None,
     cabinClass: Annotated[str, "cabin class for the flight search, allowed values are first, business"] = None,
     sortByPrice: Annotated[str, "sort by price of flight offers, allowed values are ascending or descending"] = None,
+    summarize: Annotated[bool, "summarize the flight offers, default is False, if True, returns only the summary of the flight offers"] = False
     ):
     """Search for flights based on user preference of origin, destination and departure date. Returns a json string with details of relevant flights."""
     try:
@@ -44,12 +45,31 @@ def search_offers(
         
         logger.info("search_offers payload: %s", payload)
         logger.info("search_offers params: %s", params)
+        logger.info("search_offers summarize: %s", summarize)
 
         response = requests.post(api_url, headers=headers, json=payload, params=params)
 
         if response.status_code == 200:
             flights_data = response.json()
+            if summarize:
+                summarized_offers = []
+                data = flights_data.get('data', {})
+                for key, value in data.items():
+                    summary_offer = {
+                        "offer_id": value.get('offerId'),
+                        "origin": value.get('origin'),
+                        "destination": value.get('destination'),
+                        "departure_date": value.get('departure_date'),
+                        "arrival_date": value.get('arrival_date'),
+                        "totalCost": value.get('totalCost'),
+                        "currency": value.get('currency')
+                    }
+                    summarized_offers.append(summary_offer)
+                return summarized_offers[:3]
+                
+            logger.info("Type of data: %s", type(flights_data.get('data')))
             return flights_data.get('data')
+
         else:
            return None
     except Exception as e:
