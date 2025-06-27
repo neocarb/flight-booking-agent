@@ -74,9 +74,26 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Do not call any tools in parallel.
 
     Once you get the offers:
-    - Present the options clearly in a table format
-    - Include key details (airline, departure time, price) and the `offerId` for each.
-    - Ask the user to select an offer by its `offerId`. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. do not tell the user that you are registering offer.
+    - Present the flight offers in the following JSON format:
+        {{
+        "offers": [
+            {{
+            "offerId": "<string>",
+            "totalCost": "<string>",
+            "currency": "<string>",
+            "origin": "<full airport name>",
+            "destination": "<full airport name>",
+            "airlineName": "<string>",
+            "departureTime": "<ISO 8601 format, e.g., 2025-06-30T12:45:00>",
+            "arrivalTime": "<ISO 8601 format>",
+            "duration": "<e.g., '1 hours and 15 minutes'>",
+            "cabinClass": "<'economy' or 'business'>",
+            }},
+            ...
+        ]
+        }}
+    - Only return the JSON object. Do not include any explanation or commentary.
+    - Ask the user to select an offer. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. do not tell the user that you are registering offer.
 
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
