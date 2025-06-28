@@ -19,7 +19,7 @@ def build_agent_prompt(base_instruction: str, step_number: int, previous_step: s
 Context: You are step {step_number} in a multi-step flight booking process.
 - Previous step: {previous_step}
 - Next step: {next_step}
-Your goal is to generate natural, flowing responses that feel like part of a single conversation. 
+Your goal is to generate natural, flowing responses that feel like part of a single conversation. Do not overstep into the next step or refer to it explicitly.
 Avoid robotic transitions. Refer casually to earlier steps where appropriate.
 """
     return base_instruction.strip() + "\n" + flow_context.strip()
@@ -100,7 +100,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     search_flight_offers_agent = create_react_agent(
         llm,
         tools=[search_offers, register_offer],
-        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect passenger details from user for booking")
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect specific passenger details from user for booking")
     )
     
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
