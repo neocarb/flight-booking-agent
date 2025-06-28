@@ -19,7 +19,7 @@ def build_agent_prompt(base_instruction: str, step_number: int, previous_step: s
 Context: You are step {step_number} in a multi-step flight booking process.
 - Previous step: {previous_step}
 - Next step: {next_step}
-Your goal is to generate natural, flowing responses that feel like part of a single conversation. Do not overstep into the next step or refer to it explicitly.
+Your goal is to generate natural, flowing responses that feel like part of a single conversation, without overstepping into the next step prematurely.
 Avoid robotic transitions. Refer casually to earlier steps where appropriate.
 """
     return base_instruction.strip() + "\n" + flow_context.strip()
