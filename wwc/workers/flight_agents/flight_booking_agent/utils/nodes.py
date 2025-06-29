@@ -11,7 +11,7 @@ from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInt
 
 # should try to reduce the number of nodes, reduces failure rate
 
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-4o-mini")
 logger = logging.getLogger(__name__)
 
 def build_agent_prompt(base_instruction: str, step_number: int, previous_step: str, next_step: str) -> str:
@@ -93,14 +93,14 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
         ]
         }}
     - Only return the JSON object. Do not include any explanation or commentary.
-    - Ask the user to select an offer. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. do not tell the user that you are registering offer.
+    - Ask the user to select an offer. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. Tell the user that we will start the booking process for the selected flight.
 
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
     search_flight_offers_agent = create_react_agent(
         llm,
         tools=[search_offers, register_offer],
-        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect specific passenger details from user for booking")
+        prompt=build_agent_prompt(search_flight_offers_instruction, 1, "This is the start of the booking process.", "Collect specific passenger details from to user to start the booking process.")
     )
     
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
