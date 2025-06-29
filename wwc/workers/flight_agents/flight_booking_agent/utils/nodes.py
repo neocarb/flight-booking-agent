@@ -11,7 +11,7 @@ from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInt
 
 # should try to reduce the number of nodes, reduces failure rate
 
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-4o")
 logger = logging.getLogger(__name__)
 
 def build_agent_prompt(base_instruction: str, step_number: int, previous_step: str, next_step: str) -> str:
