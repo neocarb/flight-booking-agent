@@ -74,7 +74,7 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Do not call any tools in parallel.
 
     Once you get the offers:
-    - Present the flight offers in the following JSON format:
+    - Present the flight offers in the following JSON format in plain text:
         {{
         "offers": [
             {{
@@ -92,9 +92,9 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
             ...
         ]
         }}
-    - Only return the JSON object. Do not include any explanation or commentary.
-    - Ask the user to select an offer. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. Tell the user that we will start the booking process for the selected flight.
-
+    - Ensure, the message is formatted as a single JSON string without any predecessor or successor text.
+    
+    Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. Tell the user that we will start the booking process for the selected flight.
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
     search_flight_offers_agent = create_react_agent(
@@ -105,11 +105,14 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
     
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
-    flight_offers = tool_message.content if tool_message and tool_message.content else None
-    
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
-    selected_flight_offer = tool_message.content if tool_message and tool_message.content else None
+    search_offers_tool_message = next((msg for msg in reversed(result['messages']) if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
+    flight_offers = search_offers_tool_message.content if search_offers_tool_message and search_offers_tool_message.content else None
+    message_index = next((i for i, m in enumerate(result['messages']) if getattr(m, 'id', None) == getattr(search_offers_tool_message, 'id', None)), -1)
+    logger.info("message_index: %s", message_index)
+    result['messages'][message_index + 1].id = f"do-not-render-search-offers-{result['messages'][message_index + 1].id}" if message_index != -1 else result['messages'][message_index + 1].id
+
+    register_offer_tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
+    selected_flight_offer = register_offer_tool_message.content if register_offer_tool_message and register_offer_tool_message.content else None
     logger.info("selected_flight_offer: %s", selected_flight_offer)
 
     # msgs = trim_messages(
@@ -126,7 +129,6 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     return {
         "messages": msgs,
         'from_node': 'search_flight_offers_node',
-        "flight_offers": flight_offers,
         "selected_flight_offer": selected_flight_offer
     }
 
