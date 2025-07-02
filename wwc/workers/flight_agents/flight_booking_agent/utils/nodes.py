@@ -74,7 +74,8 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Do not call any tools in parallel.
 
     Once you get the offers:
-    - Present the flight offers in the following JSON format in plain text:
+    - aggregate the offers from multiple searches if required
+    - Present the final list of flight offers in the following JSON format in plain text:
         {{
         "offers": [
             {{
@@ -106,10 +107,9 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
     
     search_offers_tool_message = next((msg for msg in reversed(result['messages']) if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
-    flight_offers = search_offers_tool_message.content if search_offers_tool_message and search_offers_tool_message.content else None
     message_index = next((i for i, m in enumerate(result['messages']) if getattr(m, 'id', None) == getattr(search_offers_tool_message, 'id', None)), -1)
     logger.info("message_index: %s", message_index)
-    result['messages'][message_index + 1].id = f"do-not-render-search-offers-{result['messages'][message_index + 1].id}" if message_index != -1 else result['messages'][message_index + 1].id
+    result['messages'][message_index + 1].id = f"search-offers-{result['messages'][message_index + 1].id}" if message_index != -1 else result['messages'][message_index + 1].id
 
     register_offer_tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
     selected_flight_offer = register_offer_tool_message.content if register_offer_tool_message and register_offer_tool_message.content else None
@@ -198,7 +198,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     - Email address (should be valid and will be used for sending the airline tickets)
     - Date of Birth (DOB) in YYYY-MM-DD format
     - Gender (m for male, f for female)
-    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
+    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct only once.
     3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
     4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
 
