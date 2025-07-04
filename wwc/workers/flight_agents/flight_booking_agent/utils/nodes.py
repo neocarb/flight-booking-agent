@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from langchain_openai import ChatOpenAI
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
@@ -13,6 +14,30 @@ from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInt
 
 llm = ChatOpenAI(model="gpt-4o")
 logger = logging.getLogger(__name__)
+
+
+def get_offers_json(message_content: str) -> dict:
+    """
+    Returns a dictionary if message_content contains a valid offers JSON object as specified in the prompt.
+    """
+    # Try to extract the first JSON object from the string
+    json_pattern = re.compile(r'\{.*\}', re.DOTALL)
+    match = json_pattern.search(message_content)
+    if not match:
+        return None
+    json_str = match.group(0)
+    try:
+        data = json.loads(json_str)
+        # Check for the required structure
+        if (
+            isinstance(data, dict) and
+            "offers" in data and
+            isinstance(data["offers"], list)
+        ):
+            return data
+    except Exception:
+        return None
+    return None
 
 def build_agent_prompt(base_instruction: str, step_number: int, previous_step: str, next_step: str) -> str:
     flow_context = f"""
@@ -74,7 +99,9 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     Do not call any tools in parallel.
 
     Once you get the offers:
-    - Present the flight offers in the following JSON format:
+    - aggregate the offers from multiple searches if required
+    - Always present the flight offers in the following JSON format as markdown and ONLY the JSON (no explanation, no commentary, no extra text):
+        ``` json
         {{
         "offers": [
             {{
@@ -92,9 +119,9 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
             ...
         ]
         }}
-    - Only return the JSON object. Do not include any explanation or commentary.
-    - Ask the user to select an offer. Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. Tell the user that we will start the booking process for the selected flight.
-
+    - Ensure, the message is formatted as a single JSON string without any predecessor or successor text.
+    
+    Once the user selects an offer, call the `register_offer` tool to register the selected offer ID. Tell the user that we will start the booking process for the selected flight.
     Keep your responses helpful, concise, and professional. Ask clarifying questions if any detail is missing or ambiguous.
     """
     search_flight_offers_agent = create_react_agent(
@@ -105,11 +132,13 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
     
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
-    flight_offers = tool_message.content if tool_message and tool_message.content else None
-    
-    tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
-    selected_flight_offer = tool_message.content if tool_message and tool_message.content else None
+    for i, msg in enumerate(result['messages']):
+        if isinstance(msg, AIMessage) and get_offers_json(msg.content):
+            result['messages'][i].content = json.dumps(get_offers_json(msg.content), indent=2)  # format the JSON nicely
+            result['messages'][i].id = f"search-offers-{result['messages'][i].id}"  # tag the message with offers
+
+    register_offer_tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
+    selected_flight_offer = register_offer_tool_message.content if register_offer_tool_message and register_offer_tool_message.content else None
     logger.info("selected_flight_offer: %s", selected_flight_offer)
 
     # msgs = trim_messages(
@@ -126,7 +155,6 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     return {
         "messages": msgs,
         'from_node': 'search_flight_offers_node',
-        "flight_offers": flight_offers,
         "selected_flight_offer": selected_flight_offer
     }
 
@@ -196,7 +224,7 @@ def collect_passenger_details_node(state: FlightBookingState) -> FlightBookingSt
     - Email address (should be valid and will be used for sending the airline tickets)
     - Date of Birth (DOB) in YYYY-MM-DD format
     - Gender (m for male, f for female)
-    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct.
+    2. Once all fields are collected, show a structured summary and ask the user to confirm everything is correct only once.
     3. Only after the user confirms, call the `collect_passenger_details` tool to record the information.
     4. Once complete, the process will proceed automatically to payment and booking. Ask the user to wait patiently for the payment link
 
