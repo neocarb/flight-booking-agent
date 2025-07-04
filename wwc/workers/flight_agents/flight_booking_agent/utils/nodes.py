@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from langchain_openai import ChatOpenAI
 from langgraph.types import interrupt
 from langgraph.prebuilt import create_react_agent
@@ -13,6 +14,30 @@ from langgraph.prebuilt.interrupt import HumanInterrupt, ActionRequest, HumanInt
 
 llm = ChatOpenAI(model="gpt-4o")
 logger = logging.getLogger(__name__)
+
+
+def get_offers_json(message_content: str) -> dict:
+    """
+    Returns a dictionary if message_content contains a valid offers JSON object as specified in the prompt.
+    """
+    # Try to extract the first JSON object from the string
+    json_pattern = re.compile(r'\{.*\}', re.DOTALL)
+    match = json_pattern.search(message_content)
+    if not match:
+        return None
+    json_str = match.group(0)
+    try:
+        data = json.loads(json_str)
+        # Check for the required structure
+        if (
+            isinstance(data, dict) and
+            "offers" in data and
+            isinstance(data["offers"], list)
+        ):
+            return data
+    except Exception:
+        return None
+    return None
 
 def build_agent_prompt(base_instruction: str, step_number: int, previous_step: str, next_step: str) -> str:
     flow_context = f"""
@@ -75,7 +100,8 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
 
     Once you get the offers:
     - aggregate the offers from multiple searches if required
-    - Present the final list of flight offers in the following JSON format in plain text:
+    - Always present the flight offers in the following JSON format as markdown and ONLY the JSON (no explanation, no commentary, no extra text):
+        ``` json
         {{
         "offers": [
             {{
@@ -106,10 +132,10 @@ def search_flight_offers_node(state: FlightBookingState) -> FlightBookingState:
     
     result = search_flight_offers_agent.invoke(state) # input should last x messages and the state, this helps with context issues. Can have a helper fucntion
     
-    search_offers_tool_message = next((msg for msg in reversed(result['messages']) if isinstance(msg, ToolMessage) and msg.name == 'search_offers'), None)
-    message_index = next((i for i, m in enumerate(result['messages']) if getattr(m, 'id', None) == getattr(search_offers_tool_message, 'id', None)), -1)
-    logger.info("message_index: %s", message_index)
-    result['messages'][message_index + 1].id = f"search-offers-{result['messages'][message_index + 1].id}" if message_index != -1 else result['messages'][message_index + 1].id
+    for i, msg in enumerate(result['messages']):
+        if isinstance(msg, AIMessage) and get_offers_json(msg.content):
+            result['messages'][i].content = json.dumps(get_offers_json(msg.content), indent=2)  # format the JSON nicely
+            result['messages'][i].id = f"search-offers-{result['messages'][i].id}"  # tag the message with offers
 
     register_offer_tool_message = next((msg for msg in result['messages'] if isinstance(msg, ToolMessage) and msg.name == 'register_offer'), None)
     selected_flight_offer = register_offer_tool_message.content if register_offer_tool_message and register_offer_tool_message.content else None
